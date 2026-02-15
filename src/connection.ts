@@ -4,7 +4,7 @@ import * as acp from '@agentclientprotocol/sdk';
 import { CopilotClient } from './copilot-client.ts';
 import { TerminalManager } from './terminal-manager.ts';
 
-export async function createConnection(executable: string, model: string) {
+export async function createConnection(executable: string, model: string, workdir: string) {
   const copilotProcess = spawn(executable, ['--acp', '--stdio'], {
     stdio: ['pipe', 'pipe', 'inherit'],
   });
@@ -15,7 +15,7 @@ export async function createConnection(executable: string, model: string) {
   ) as ReadableStream<Uint8Array>;
 
   const terminals = new TerminalManager();
-  const client = new CopilotClient(terminals);
+  const client = new CopilotClient(terminals, workdir);
   const stream = acp.ndJsonStream(input, output);
   const connection = new acp.ClientSideConnection(
     (_agent) => client,
@@ -35,7 +35,7 @@ export async function createConnection(executable: string, model: string) {
   );
 
   const session = await connection.newSession({
-    cwd: process.cwd(),
+    cwd: workdir,
     mcpServers: [],
   });
 

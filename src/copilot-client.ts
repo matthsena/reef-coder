@@ -1,4 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import type * as acp from '@agentclientprotocol/sdk';
 import type { TerminalManager } from './terminal-manager.ts';
 const ESC = '\x1b[';
@@ -8,7 +9,14 @@ const cyan = fmt('36');
 const yellow = fmt('33');
 
 export class CopilotClient implements acp.Client {
-  constructor(private terminals: TerminalManager) {}
+  constructor(private terminals: TerminalManager, private workdir: string) {}
+
+  private assertWithinWorkdir(targetPath: string): void {
+    const resolved = resolve(targetPath);
+    if (resolved !== this.workdir && !resolved.startsWith(this.workdir + '/')) {
+      throw new Error(`Access denied: ${resolved} is outside workdir ${this.workdir}`);
+    }
+  }
 
   async sessionUpdate(params: acp.SessionNotification): Promise<void> {
     const update = params.update;
@@ -64,6 +72,7 @@ export class CopilotClient implements acp.Client {
   async readTextFile(
     params: acp.ReadTextFileRequest,
   ): Promise<acp.ReadTextFileResponse> {
+    this.assertWithinWorkdir(params.path);
     const content = await readFile(params.path, 'utf-8');
     return { content };
   }
@@ -71,6 +80,7 @@ export class CopilotClient implements acp.Client {
   async writeTextFile(
     params: acp.WriteTextFileRequest,
   ): Promise<acp.WriteTextFileResponse> {
+    this.assertWithinWorkdir(params.path);
     await writeFile(params.path, params.content, 'utf-8');
     return {};
   }
@@ -78,10 +88,12 @@ export class CopilotClient implements acp.Client {
   async createTerminal(
     params: acp.CreateTerminalRequest,
   ): Promise<acp.CreateTerminalResponse> {
+    const cwd = params.cwd ?? this.workdir;
+    this.assertWithinWorkdir(cwd);
     const terminalId = this.terminals.create(
       params.command,
       params.args ?? [],
-      params.cwd ?? process.cwd(),
+      cwd,
     );
     return { terminalId };
   }
