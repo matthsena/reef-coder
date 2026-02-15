@@ -5,7 +5,7 @@ import { CopilotClient } from './copilot-client.ts';
 import { TerminalManager } from './terminal-manager.ts';
 
 export async function createConnection(executable: string, model: string) {
-  const copilotProcess = spawn(executable, ['--acp', '--stdio', '--model', model], {
+  const copilotProcess = spawn(executable, ['--acp', '--stdio'], {
     stdio: ['pipe', 'pipe', 'inherit'],
   });
 
@@ -40,6 +40,19 @@ export async function createConnection(executable: string, model: string) {
   });
 
   console.log(`Session: ${session.sessionId}`);
+
+  if (session.models) {
+    console.log(`Model: ${session.models.currentModelId}`);
+    console.log(
+      `Available: ${session.models.availableModels.map((m) => m.modelId).join(', ')}`,
+    );
+  }
+
+  await connection.unstable_setSessionModel({
+    sessionId: session.sessionId,
+    modelId: model,
+  });
+  console.log(`Model set to: ${model}\n`);
 
   return {
     connection,
