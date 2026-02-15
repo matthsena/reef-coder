@@ -6,8 +6,18 @@ import { createConnection } from './src/connection.ts';
 const EXIT_COMMANDS = new Set(['exit', 'quit']);
 
 async function main() {
-  const executable = 'copilot';
-  const model = 'gpt-5-mini';
+  const engines: Record<string, { executable: string; args: string[]; model: string }> = {
+    'copilot': { executable: 'copilot', args: ['--acp', '--stdio'], model: 'gpt-5-mini' },
+    'claude-code': { executable: 'claude-code-acp', args: [], model: 'sonnet' },
+  };
+
+  const engineIndex = process.argv.indexOf('--engine');
+  const engineName = engineIndex !== -1 ? process.argv[engineIndex + 1]! : 'copilot';
+  const engine = engines[engineName];
+  if (!engine) {
+    console.error(`Error: unknown engine "${engineName}". Available: ${Object.keys(engines).join(', ')}`);
+    process.exit(1);
+  }
 
   const workdirIndex = process.argv.indexOf('--workdir');
   const workdir =
@@ -24,8 +34,9 @@ async function main() {
   }
 
   const { connection, sessionId, shutdown } = await createConnection(
-    executable,
-    model,
+    engine.executable,
+    engine.args,
+    engine.model,
     workdir,
   );
 

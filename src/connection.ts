@@ -4,8 +4,8 @@ import * as acp from '@agentclientprotocol/sdk';
 import { CopilotClient } from './copilot-client.ts';
 import { TerminalManager } from './terminal-manager.ts';
 
-export async function createConnection(executable: string, model: string, workdir: string) {
-  const copilotProcess = spawn(executable, ['--acp', '--stdio'], {
+export async function createConnection(executable: string, spawnArgs: string[], model: string, workdir: string) {
+  const copilotProcess = spawn(executable, spawnArgs, {
     stdio: ['pipe', 'pipe', 'inherit'],
   });
 
