@@ -6,16 +6,26 @@ import { createConnection } from './src/connection.ts';
 const EXIT_COMMANDS = new Set(['exit', 'quit']);
 
 async function main() {
-  const engines: Record<string, { executable: string; args: string[]; model: string }> = {
-    'copilot': { executable: 'copilot', args: ['--acp', '--stdio'], model: 'gpt-5-mini' },
-    'claude-code': { executable: 'claude-code-acp', args: [], model: 'sonnet' },
+  const engines: Record<
+    string,
+    { executable: string; args: string[]; model: string }
+  > = {
+    copilot: {
+      executable: 'copilot',
+      args: ['--acp', '--stdio'],
+      model: 'gpt-5-mini',
+    },
+    'claude-code': { executable: 'claude-code-acp', args: [], model: 'opus' },
   };
 
   const engineIndex = process.argv.indexOf('--engine');
-  const engineName = engineIndex !== -1 ? process.argv[engineIndex + 1]! : 'copilot';
+  const engineName =
+    engineIndex !== -1 ? process.argv[engineIndex + 1]! : 'copilot';
   const engine = engines[engineName];
   if (!engine) {
-    console.error(`Error: unknown engine "${engineName}". Available: ${Object.keys(engines).join(', ')}`);
+    console.error(
+      `Error: unknown engine "${engineName}". Available: ${Object.keys(engines).join(', ')}`,
+    );
     process.exit(1);
   }
 
