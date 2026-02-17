@@ -74,9 +74,10 @@ export function useSessionStore(store: SessionStore) {
     };
 
     const onTurnEnd = (_stopReason: string) => {
-      if (currentRef.current) {
-        setMessages((prev) => [...prev, currentRef.current!]);
+      const msg = currentRef.current;
+      if (msg) {
         currentRef.current = null;
+        setMessages((prev) => [...prev, msg]);
         setCurrentMessage(null);
       }
       setStreaming(false);
