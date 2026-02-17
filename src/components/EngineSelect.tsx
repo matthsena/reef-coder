@@ -1,15 +1,17 @@
 import { Box, Text } from 'ink';
 import SelectInput from 'ink-select-input';
-import { ENGINES } from '../types.ts';
+import { ENGINES, ENGINE_LABELS } from '../types.ts';
 
 interface EngineSelectProps {
   onSelect: (engine: string) => void;
 }
 
-const items = Object.entries(ENGINES).map(([key, cfg]) => ({
-  label: `${key.padEnd(16)} ${cfg.model}`,
-  value: key,
-}));
+const items = Object.keys(ENGINES)
+  .map((key) => ({
+    label: ENGINE_LABELS[key] ?? key,
+    value: key,
+  }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 export function EngineSelect({ onSelect }: EngineSelectProps) {
   return (

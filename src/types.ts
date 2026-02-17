@@ -6,16 +6,30 @@ export interface EngineConfig {
   model: string;
 }
 
+export const ENGINE_LABELS: Record<string, string> = {
+  'claude-code': 'Claude Code',
+  codex: 'Codex',
+  copilot: 'GitHub Copilot CLI',
+  gemini: 'Gemini CLI',
+  opencode: 'OpenCode',
+  'qwen-code': 'Qwen Code',
+};
+
 export const ENGINES: Record<string, EngineConfig> = {
-  copilot: {
-    executable: 'copilot',
-    args: ['--acp', '--stdio'],
-    model: 'gpt-5-mini',
-  },
   'claude-code': {
     executable: 'claude-code-acp',
     args: [],
     model: 'opus',
+  },
+  codex: {
+    executable: 'codex-acp',
+    args: [],
+    model: 'gpt-5.2-codex',
+  },
+  copilot: {
+    executable: 'copilot',
+    args: ['--acp', '--stdio'],
+    model: 'gpt-5-mini',
   },
   gemini: {
     executable: 'gemini',
@@ -31,11 +45,6 @@ export const ENGINES: Record<string, EngineConfig> = {
     executable: 'qwen',
     args: ['--acp'],
     model: 'corder-model',
-  },
-  codex: {
-    executable: 'codex-acp',
-    args: [],
-    model: 'gpt-5.2-codex',
   },
 };
 
