@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { Writable, Readable } from 'node:stream';
 import * as acp from '@agentclientprotocol/sdk';
 import { zSessionNotification } from '@agentclientprotocol/sdk/dist/schema/zod.gen.js';
-import { CopilotClient } from './copilot-client.ts';
+import { AgentClient } from './agent-client.ts';
 import { TerminalManager } from './terminal-manager.ts';
 
 // Monkey-patch zSessionNotification to tolerate unknown session update shapes
@@ -15,23 +15,25 @@ import { TerminalManager } from './terminal-manager.ts';
   return data;
 };
 
-export async function createConnection(executable: string, spawnArgs: string[], model: string, workdir: string) {
-  const copilotProcess = spawn(executable, spawnArgs, {
+export async function createConnection(
+  executable: string,
+  spawnArgs: string[],
+  model: string,
+  workdir: string,
+) {
+  const agentProcess = spawn(executable, spawnArgs, {
     stdio: ['pipe', 'pipe', 'inherit'],
   });
 
-  const input = Writable.toWeb(copilotProcess.stdin!);
+  const input = Writable.toWeb(agentProcess.stdin!);
   const output = Readable.toWeb(
-    copilotProcess.stdout!,
+    agentProcess.stdout!,
   ) as ReadableStream<Uint8Array>;
 
   const terminals = new TerminalManager();
-  const client = new CopilotClient(terminals, workdir);
+  const client = new AgentClient(terminals, workdir);
   const stream = acp.ndJsonStream(input, output);
-  const connection = new acp.ClientSideConnection(
-    (_agent) => client,
-    stream,
-  );
+  const connection = new acp.ClientSideConnection((_agent) => client, stream);
 
   const initResult = await connection.initialize({
     protocolVersion: acp.PROTOCOL_VERSION,
@@ -41,9 +43,7 @@ export async function createConnection(executable: string, spawnArgs: string[], 
     },
   });
 
-  console.log(
-    `Connected to Copilot (protocol v${initResult.protocolVersion})`,
-  );
+  console.log(`Connected to agent (protocol v${initResult.protocolVersion})`);
 
   const session = await connection.newSession({
     cwd: workdir,
@@ -69,10 +69,13 @@ export async function createConnection(executable: string, spawnArgs: string[], 
     connection,
     sessionId: session.sessionId,
     shutdown: async () => {
-      copilotProcess.kill('SIGTERM');
+      agentProcess.kill('SIGTERM');
       await new Promise<void>((resolve) => {
         const timer = setTimeout(resolve, 2000);
-        copilotProcess.once('exit', () => { clearTimeout(timer); resolve(); });
+        agentProcess.once('exit', () => {
+          clearTimeout(timer);
+          resolve();
+        });
       });
     },
   };

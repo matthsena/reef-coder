@@ -19,11 +19,6 @@ bun run index.ts
 - `--engine <name>` — Select the agent engine. Available: `copilot` (default), `claude-code`
 - `--workdir <path>` — Set the working directory for the agent (defaults to current directory)
 
-### Environment variables
-
-- `COPILOT_CLI_PATH` — Override the Copilot executable path
-- `COPILOT_MODEL` — Override the default model (default: `gpt-5-mini`)
-
 ### Examples
 
 ```bash
@@ -45,7 +40,7 @@ Inside the REPL, type your prompt and press Enter. Type `exit` or `quit` to clos
 |------|-------------|
 | `index.ts` | Entry point. Parses CLI args, creates the ACP connection, runs the readline REPL loop. |
 | `src/connection.ts` | Spawns the agent process, wires up ACP streams, initializes session. |
-| `src/copilot-client.ts` | `CopilotClient` — handles session updates (streamed text/thoughts/tool calls/plans), auto-accepts permissions, delegates filesystem and terminal operations. |
+| `src/agent-client.ts` | `AgentClient` — handles session updates (streamed text/thoughts/tool calls/plans), auto-accepts permissions, delegates filesystem and terminal operations. |
 | `src/terminal-manager.ts` | `TerminalManager` — encapsulates child process lifecycle (create, output, wait, kill, release). |
 
 ## Tech stack

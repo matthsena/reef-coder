@@ -8,13 +8,18 @@ const dim = fmt('2');
 const cyan = fmt('36');
 const yellow = fmt('33');
 
-export class CopilotClient implements acp.Client {
-  constructor(private terminals: TerminalManager, private workdir: string) {}
+export class AgentClient implements acp.Client {
+  constructor(
+    private terminals: TerminalManager,
+    private workdir: string,
+  ) {}
 
   private assertWithinWorkdir(targetPath: string): void {
     const resolved = resolve(targetPath);
     if (resolved !== this.workdir && !resolved.startsWith(this.workdir + '/')) {
-      throw new Error(`Access denied: ${resolved} is outside workdir ${this.workdir}`);
+      throw new Error(
+        `Access denied: ${resolved} is outside workdir ${this.workdir}`,
+      );
     }
   }
 
@@ -44,7 +49,9 @@ export class CopilotClient implements acp.Client {
 
       case 'tool_call_update':
         console.log(
-          cyan(`[tool update] ${update.toolCallId}: ${update.status ?? 'unknown'}`),
+          cyan(
+            `[tool update] ${update.toolCallId}: ${update.status ?? 'unknown'}`,
+          ),
         );
         break;
 
