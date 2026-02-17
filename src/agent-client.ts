@@ -2,16 +2,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type * as acp from '@agentclientprotocol/sdk';
 import type { TerminalManager } from './terminal-manager.ts';
-const ESC = '\x1b[';
-const fmt = (code: string) => (s: string) => `${ESC}${code}m${s}${ESC}0m`;
-const dim = fmt('2');
-const cyan = fmt('36');
-const yellow = fmt('33');
+import type { SessionStore } from './store.ts';
 
 export class AgentClient implements acp.Client {
   constructor(
     private terminals: TerminalManager,
     private workdir: string,
+    private store: SessionStore,
   ) {}
 
   private assertWithinWorkdir(targetPath: string): void {
@@ -28,7 +25,8 @@ export class AgentClient implements acp.Client {
 
     switch (update.sessionUpdate) {
       case 'agent_message_chunk':
-        process.stdout.write(
+        this.store.emit(
+          'agent-message-chunk',
           update.content.type === 'text'
             ? update.content.text
             : `[${update.content.type}]`,
@@ -37,29 +35,31 @@ export class AgentClient implements acp.Client {
 
       case 'agent_thought_chunk':
         if (update.content.type === 'text') {
-          process.stdout.write(dim(update.content.text));
+          this.store.emit('agent-thought-chunk', update.content.text);
         }
         break;
 
       case 'tool_call':
-        console.log(
-          `\n${cyan(`[tool] ${update.title} (${update.status ?? 'started'})`)}`,
-        );
+        this.store.emit('tool-call', {
+          id: update.toolCallId,
+          title: update.title,
+          status: update.status ?? 'started',
+        });
         break;
 
       case 'tool_call_update':
-        console.log(
-          cyan(
-            `[tool update] ${update.toolCallId}: ${update.status ?? 'unknown'}`,
-          ),
+        this.store.emit(
+          'tool-call-update',
+          update.toolCallId,
+          update.status ?? 'unknown',
         );
         break;
 
       case 'plan':
-        console.log(`\n${yellow('[plan]')}`);
-        for (const entry of update.entries) {
-          console.log(`  [${entry.status}] ${entry.content}`);
-        }
+        this.store.emit(
+          'plan',
+          update.entries.map((e) => ({ status: e.status, content: e.content })),
+        );
         break;
     }
   }
@@ -68,8 +68,9 @@ export class AgentClient implements acp.Client {
     params: acp.RequestPermissionRequest,
   ): Promise<acp.RequestPermissionResponse> {
     const option = params.options[0]!;
-    console.log(
-      `\n${yellow(`[permission] auto-accepting: "${option.name}" (${option.kind}) for ${params.toolCall.title}`)}`,
+    this.store.emit(
+      'permission',
+      `Auto-accepting: "${option.name}" (${option.kind}) for ${params.toolCall.title}`,
     );
     return {
       outcome: { outcome: 'selected', optionId: option.optionId },

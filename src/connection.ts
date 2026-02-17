@@ -4,6 +4,7 @@ import * as acp from '@agentclientprotocol/sdk';
 import { zSessionNotification } from '@agentclientprotocol/sdk/dist/schema/zod.gen.js';
 import { AgentClient } from './agent-client.ts';
 import { TerminalManager } from './terminal-manager.ts';
+import type { SessionStore } from './store.ts';
 
 // Monkey-patch zSessionNotification to tolerate unknown session update shapes
 // (e.g. tool_call_update content items that don't match the strict SDK schema).
@@ -15,12 +16,18 @@ import { TerminalManager } from './terminal-manager.ts';
   return data;
 };
 
+export interface AvailableModel {
+  modelId: string;
+}
+
 export async function createConnection(
   executable: string,
   spawnArgs: string[],
-  model: string,
   workdir: string,
+  store: SessionStore,
 ) {
+  store.emit('connection-status', `Spawning ${executable}...`);
+
   const agentProcess = spawn(executable, spawnArgs, {
     stdio: ['pipe', 'pipe', 'inherit'],
   });
@@ -31,7 +38,7 @@ export async function createConnection(
   ) as ReadableStream<Uint8Array>;
 
   const terminals = new TerminalManager();
-  const client = new AgentClient(terminals, workdir);
+  const client = new AgentClient(terminals, workdir, store);
   const stream = acp.ndJsonStream(input, output);
   const connection = new acp.ClientSideConnection((_agent) => client, stream);
 
@@ -43,31 +50,32 @@ export async function createConnection(
     },
   });
 
-  console.log(`Connected to agent (protocol v${initResult.protocolVersion})`);
+  store.emit(
+    'connection-status',
+    `Connected (protocol v${initResult.protocolVersion})`,
+  );
 
   const session = await connection.newSession({
     cwd: workdir,
     mcpServers: [],
   });
 
-  console.log(`Session: ${session.sessionId}`);
+  store.emit('connection-status', `Session: ${session.sessionId}`);
 
-  if (session.models) {
-    console.log(`Model: ${session.models.currentModelId}`);
-    console.log(
-      `Available: ${session.models.availableModels.map((m) => m.modelId).join(', ')}`,
-    );
+  const availableModels: AvailableModel[] = session.models
+    ? session.models.availableModels.map((m) => ({ modelId: m.modelId }))
+    : [];
+  const currentModelId = session.models?.currentModelId ?? null;
+
+  if (currentModelId) {
+    store.emit('connection-status', `Current model: ${currentModelId}`);
   }
-
-  await connection.unstable_setSessionModel({
-    sessionId: session.sessionId,
-    modelId: model,
-  });
-  console.log(`Model set to: ${model}\n`);
 
   return {
     connection,
     sessionId: session.sessionId,
+    availableModels,
+    currentModelId,
     shutdown: async () => {
       agentProcess.kill('SIGTERM');
       await new Promise<void>((resolve) => {
@@ -79,4 +87,14 @@ export async function createConnection(
       });
     },
   };
+}
+
+export async function setSessionModel(
+  connection: acp.ClientSideConnection,
+  sessionId: string,
+  modelId: string,
+  store: SessionStore,
+) {
+  await connection.unstable_setSessionModel({ sessionId, modelId });
+  store.emit('connection-status', `Model set to: ${modelId}`);
 }
