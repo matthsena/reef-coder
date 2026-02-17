@@ -6,7 +6,6 @@ import type { Screen } from '../types.ts';
 import { SessionStore } from '../store.ts';
 import { createConnection, setSessionModel } from '../connection.ts';
 import type { AvailableModel } from '../connection.ts';
-import { Header } from './Header.tsx';
 import { EngineSelect } from './EngineSelect.tsx';
 import { ModelSelect } from './ModelSelect.tsx';
 import { Connecting } from './Connecting.tsx';
@@ -101,13 +100,6 @@ export function App({ workdir }: AppProps) {
 
   return (
     <Box flexDirection="column">
-      {screen !== 'engine-select' && (
-        <Header
-          engine={engine || undefined}
-          model={screen === 'chat' ? model : undefined}
-        />
-      )}
-
       {screen === 'engine-select' && (
         <EngineSelect onSelect={handleEngineSelect} />
       )}

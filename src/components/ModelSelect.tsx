@@ -1,5 +1,6 @@
-import { Box, Text } from 'ink';
-import SelectInput from 'ink-select-input';
+import { useState } from 'react';
+import { Box, Text, useInput } from 'ink';
+import { ENGINE_LABELS, ENGINE_COLORS } from '../types.ts';
 import type { AvailableModel } from '../connection.ts';
 
 interface ModelSelectProps {
@@ -15,6 +16,9 @@ export function ModelSelect({
   currentModelId,
   onSelect,
 }: ModelSelectProps) {
+  const label = ENGINE_LABELS[engine] ?? engine;
+  const color = ENGINE_COLORS[engine] ?? 'white';
+
   const items = availableModels.map((m) => ({
     label:
       m.modelId === currentModelId
@@ -23,18 +27,35 @@ export function ModelSelect({
     value: m.modelId,
   }));
 
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useInput((_input, key) => {
+    if (key.upArrow) {
+      setSelectedIndex((i) => (i > 0 ? i - 1 : items.length - 1));
+    } else if (key.downArrow) {
+      setSelectedIndex((i) => (i < items.length - 1 ? i + 1 : 0));
+    } else if (key.return) {
+      onSelect(items[selectedIndex]!.value);
+    }
+  });
+
   return (
     <Box flexDirection="column" paddingX={2} paddingY={1}>
-      <Text>
-        Engine: <Text bold color="cyan">{engine}</Text>
-      </Text>
+      <Text bold color={color}>{label}</Text>
       <Box marginTop={1} flexDirection="column">
         <Text bold>Select model:</Text>
-        <Box marginTop={1}>
-          <SelectInput
-            items={items}
-            onSelect={(item) => onSelect(item.value)}
-          />
+        <Box marginTop={1} flexDirection="column">
+          {items.map((item, index) => {
+            const isSelected = index === selectedIndex;
+            return (
+              <Box key={item.value}>
+                <Text>{isSelected ? '❯ ' : '  '}</Text>
+                <Text bold={isSelected} color={isSelected ? color : undefined}>
+                  {item.label}
+                </Text>
+              </Box>
+            );
+          })}
         </Box>
       </Box>
       <Box marginTop={1}>
