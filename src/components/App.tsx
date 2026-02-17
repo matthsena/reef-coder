@@ -55,13 +55,10 @@ export function App({ workdir }: AppProps) {
           // No model list available — use engine default and go straight to chat
           setModel(engineCfg.model);
           setSessionModel(result.connection, result.sessionId, engineCfg.model, store)
-            .then(() => setScreen('chat'))
-            .catch((err: unknown) => {
-              setStatusMessages((prev) => [
-                ...prev,
-                `Error setting model: ${err instanceof Error ? err.message : String(err)}`,
-              ]);
-            });
+            .catch(() => {
+              // Model setting not supported — proceed with engine default
+            })
+            .then(() => setScreen('chat'));
         }
       })
       .catch((err: unknown) => {
@@ -88,9 +85,15 @@ export function App({ workdir }: AppProps) {
       setSessionModel(conn.connection, conn.sessionId, selectedModel, store)
         .then(() => setScreen('chat'))
         .catch((err: unknown) => {
+          const msg =
+            err instanceof Error
+              ? err.message
+              : typeof err === 'object' && err !== null
+                ? JSON.stringify(err)
+                : String(err);
           setStatusMessages((prev) => [
             ...prev,
-            `Error setting model: ${err instanceof Error ? err.message : String(err)}`,
+            `Error setting model: ${msg}`,
           ]);
         });
     },
