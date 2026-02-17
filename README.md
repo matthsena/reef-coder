@@ -1,6 +1,6 @@
 # agent-swarm
 
-CLI client for GitHub Copilot, Claude Code, Gemini CLI, OpenCode, Qwen Code, and Codex using the [Agent Client Protocol (ACP)](https://github.com/nichochar/agent-client-protocol). Spawns an agent subprocess, communicates over newline-delimited JSON streams, and provides an interactive REPL for prompts and streamed responses.
+Interactive terminal UI for GitHub Copilot, Claude Code, Gemini CLI, OpenCode, Qwen Code, and Codex using the [Agent Client Protocol (ACP)](https://github.com/nichochar/agent-client-protocol). Built with [Ink](https://github.com/vadimdemedes/ink) (React for the terminal).
 
 Each engine's CLI must be installed separately before use.
 
@@ -16,49 +16,40 @@ bun install
 bun run index.ts
 ```
 
+On launch, the app presents an interactive engine selection screen, then asks for the model (pre-filled with the engine default), then connects and enters a chat REPL.
+
 ### Options
 
-- `--engine <name>` — Select the agent engine. Available: `copilot` (default), `claude-code`, `gemini`, `opencode`, `qwen-code`, `codex`
 - `--workdir <path>` — Set the working directory for the agent (defaults to current directory)
 
 ### Examples
 
 ```bash
-# Use Copilot (default)
+# Launch with interactive engine selection
 bun run index.ts
-
-# Use Claude Code as engine
-bun run index.ts --engine claude-code
-
-# Use Gemini CLI
-bun run index.ts --engine gemini
-
-# Use OpenCode
-bun run index.ts --engine opencode
-
-# Use Qwen Code
-bun run index.ts --engine qwen-code
-
-# Use Codex
-bun run index.ts --engine codex
 
 # Set a custom working directory
 bun run index.ts --workdir /path/to/project
 ```
 
-Inside the REPL, type your prompt and press Enter. Type `exit` or `quit` to close.
+Inside the chat, type your prompt and press Enter. Type `exit` or `quit` to close.
 
 ## Architecture
 
 | File | Description |
 |------|-------------|
-| `index.ts` | Entry point. Parses CLI args, creates the ACP connection, runs the readline REPL loop. |
+| `index.ts` | Entry point. Parses `--workdir`, renders the Ink `<App>` component. |
+| `src/types.ts` | Shared types and `ENGINES` config dict. |
+| `src/store.ts` | `SessionStore` — typed EventEmitter bridging ACP callbacks to React state. |
 | `src/connection.ts` | Spawns the agent process, wires up ACP streams, initializes session. |
-| `src/agent-client.ts` | `AgentClient` — handles session updates (streamed text/thoughts/tool calls/plans), auto-accepts permissions, delegates filesystem and terminal operations. |
-| `src/terminal-manager.ts` | `TerminalManager` — encapsulates child process lifecycle (create, output, wait, kill, release). |
+| `src/agent-client.ts` | `AgentClient` — emits session updates to `SessionStore`, auto-accepts permissions, delegates FS/terminal ops. |
+| `src/terminal-manager.ts` | `TerminalManager` — child process lifecycle management. |
+| `src/hooks/useSessionStore.ts` | React hook subscribing to `SessionStore` events. |
+| `src/components/` | Ink UI components: `App`, `Header`, `EngineSelect`, `ModelInput`, `Connecting`, `Chat`, `MessageBubble`, `ToolCallCard`, `ThoughtBlock`, `PlanView`, `StatusBar`, `PromptInput`. |
 
 ## Tech stack
 
 - **Runtime:** [Bun](https://bun.com)
 - **Language:** TypeScript (strict mode)
+- **UI:** [Ink](https://github.com/vadimdemedes/ink) (React for the terminal)
 - **Protocol:** [Agent Client Protocol SDK](https://www.npmjs.com/package/@agentclientprotocol/sdk)
