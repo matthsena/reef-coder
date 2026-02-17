@@ -15,6 +15,15 @@ export const ENGINE_LABELS: Record<string, string> = {
   'qwen-code': 'Qwen Code',
 };
 
+export const ENGINE_COLORS: Record<string, string> = {
+  'claude-code': '#E07A5F',
+  codex: '#10A37F',
+  copilot: '#79C0FF',
+  gemini: '#4285F4',
+  opencode: '#22C55E',
+  'qwen-code': '#7C3AED',
+};
+
 export const ENGINES: Record<string, EngineConfig> = {
   'claude-code': {
     executable: 'claude-code-acp',
