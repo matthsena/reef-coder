@@ -1,54 +1,10 @@
-import readline from 'node:readline/promises';
 import { resolve } from 'node:path';
 import { stat } from 'node:fs/promises';
-import { createConnection } from './src/connection.ts';
-
-const EXIT_COMMANDS = new Set(['exit', 'quit']);
+import { render } from 'ink';
+import React from 'react';
+import { App } from './src/components/App.tsx';
 
 async function main() {
-  const engines: Record<
-    string,
-    { executable: string; args: string[]; model: string }
-  > = {
-    copilot: {
-      executable: 'copilot',
-      args: ['--acp', '--stdio'],
-      model: 'gpt-5-mini',
-    },
-    'claude-code': { executable: 'claude-code-acp', args: [], model: 'opus' },
-    gemini: {
-      executable: 'gemini',
-      args: ['--experimental-acp'],
-      model: 'gemini-3-flash',
-    },
-    opencode: {
-      executable: 'opencode',
-      args: ['acp'],
-      model: 'GLM-4.7',
-    },
-    'qwen-code': {
-      executable: 'qwen',
-      args: ['--acp'],
-      model: 'corder-model',
-    },
-    codex: {
-      executable: 'codex-acp',
-      args: [],
-      model: 'gpt-5.2-codex',
-    },
-  };
-
-  const engineIndex = process.argv.indexOf('--engine');
-  const engineName =
-    engineIndex !== -1 ? process.argv[engineIndex + 1]! : 'copilot';
-  const engine = engines[engineName];
-  if (!engine) {
-    console.error(
-      `Error: unknown engine "${engineName}". Available: ${Object.keys(engines).join(', ')}`,
-    );
-    process.exit(1);
-  }
-
   const workdirIndex = process.argv.indexOf('--workdir');
   const workdir =
     workdirIndex !== -1
@@ -63,43 +19,7 @@ async function main() {
     process.exit(1);
   }
 
-  const { connection, sessionId, shutdown } = await createConnection(
-    engine.executable,
-    engine.args,
-    engine.model,
-    workdir,
-  );
-
-  try {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    while (true) {
-      const input = (await rl.question('You> ')).trim();
-
-      if (EXIT_COMMANDS.has(input)) {
-        console.log('Goodbye.');
-        rl.close();
-        break;
-      }
-
-      if (!input) continue;
-
-      const result = await connection.prompt({
-        sessionId,
-        prompt: [{ type: 'text', text: input }],
-      });
-
-      console.log(`\n[stop: ${result.stopReason}]\n`);
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    await shutdown();
-    process.exit(1);
-  }
-  await shutdown();
+  render(React.createElement(App, { workdir }));
 }
 
 main().catch(console.error);
