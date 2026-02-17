@@ -37,7 +37,7 @@ export const ENGINES: Record<string, EngineConfig> = {
   },
   copilot: {
     executable: 'copilot',
-    args: ['--acp', '--stdio'],
+    args: ['--acp'],
     model: 'gpt-5-mini',
   },
   gemini: {

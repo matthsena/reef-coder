@@ -65,10 +65,13 @@ export function App({ workdir }: AppProps) {
         }
       })
       .catch((err: unknown) => {
-        setStatusMessages((prev) => [
-          ...prev,
-          `Error: ${err instanceof Error ? err.message : String(err)}`,
-        ]);
+        const msg =
+          err instanceof Error
+            ? err.message
+            : typeof err === 'object' && err !== null
+              ? JSON.stringify(err)
+              : String(err);
+        setStatusMessages((prev) => [...prev, `Error: ${msg}`]);
       });
 
     return () => {
