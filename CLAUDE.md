@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-CLI client for GitHub Copilot and Claude Code using the Agent Client Protocol (ACP). Spawns an agent subprocess, communicates over newline-delimited JSON streams, and provides an interactive REPL for prompts and streamed responses. The engine is selected via the `--engine` flag (`copilot` or `claude-code`).
+CLI client for GitHub Copilot, Claude Code, Gemini CLI, OpenCode, Qwen Code, and Codex using the Agent Client Protocol (ACP). Spawns an agent subprocess, communicates over newline-delimited JSON streams, and provides an interactive REPL for prompts and streamed responses. The engine is selected via the `--engine` flag (`copilot`, `claude-code`, `gemini`, `opencode`, `qwen-code`, or `codex`).
 
 ## Architecture
 

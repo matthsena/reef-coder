@@ -1,6 +1,8 @@
 # agent-swarm
 
-CLI client for GitHub Copilot and Claude Code using the [Agent Client Protocol (ACP)](https://github.com/nichochar/agent-client-protocol). Spawns an agent subprocess, communicates over newline-delimited JSON streams, and provides an interactive REPL for prompts and streamed responses.
+CLI client for GitHub Copilot, Claude Code, Gemini CLI, OpenCode, Qwen Code, and Codex using the [Agent Client Protocol (ACP)](https://github.com/nichochar/agent-client-protocol). Spawns an agent subprocess, communicates over newline-delimited JSON streams, and provides an interactive REPL for prompts and streamed responses.
+
+Each engine's CLI must be installed separately before use.
 
 ## Setup
 
@@ -16,7 +18,7 @@ bun run index.ts
 
 ### Options
 
-- `--engine <name>` — Select the agent engine. Available: `copilot` (default), `claude-code`
+- `--engine <name>` — Select the agent engine. Available: `copilot` (default), `claude-code`, `gemini`, `opencode`, `qwen-code`, `codex`
 - `--workdir <path>` — Set the working directory for the agent (defaults to current directory)
 
 ### Examples
@@ -27,6 +29,18 @@ bun run index.ts
 
 # Use Claude Code as engine
 bun run index.ts --engine claude-code
+
+# Use Gemini CLI
+bun run index.ts --engine gemini
+
+# Use OpenCode
+bun run index.ts --engine opencode
+
+# Use Qwen Code
+bun run index.ts --engine qwen-code
+
+# Use Codex
+bun run index.ts --engine codex
 
 # Set a custom working directory
 bun run index.ts --workdir /path/to/project

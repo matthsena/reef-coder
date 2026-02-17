@@ -16,6 +16,26 @@ async function main() {
       model: 'gpt-5-mini',
     },
     'claude-code': { executable: 'claude-code-acp', args: [], model: 'opus' },
+    gemini: {
+      executable: 'gemini',
+      args: ['--experimental-acp'],
+      model: 'gemini-3-flash',
+    },
+    opencode: {
+      executable: 'opencode',
+      args: ['acp'],
+      model: 'GLM-4.7',
+    },
+    'qwen-code': {
+      executable: 'qwen',
+      args: ['--acp'],
+      model: 'corder-model',
+    },
+    codex: {
+      executable: 'codex-acp',
+      args: [],
+      model: 'gpt-5.2-codex',
+    },
   };
 
   const engineIndex = process.argv.indexOf('--engine');
