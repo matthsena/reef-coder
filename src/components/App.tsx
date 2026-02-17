@@ -101,10 +101,12 @@ export function App({ workdir }: AppProps) {
 
   return (
     <Box flexDirection="column">
-      <Header
-        engine={screen !== 'engine-select' ? engine : undefined}
-        model={screen === 'chat' ? model : undefined}
-      />
+      {screen !== 'engine-select' && (
+        <Header
+          engine={engine || undefined}
+          model={screen === 'chat' ? model : undefined}
+        />
+      )}
 
       {screen === 'engine-select' && (
         <EngineSelect onSelect={handleEngineSelect} />
