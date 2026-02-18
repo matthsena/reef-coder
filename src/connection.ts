@@ -10,11 +10,17 @@ import type { SessionStore } from './store.ts';
 // (e.g. tool_call_update content items that don't match the strict SDK schema).
 // The SDK and this module share the same ESM singleton, so patching here
 // makes ClientSideConnection fall back to raw data instead of throwing.
-(zSessionNotification as any).parse = (data: unknown) => {
-  const result = zSessionNotification.safeParse(data);
-  if (result.success) return result.data;
-  return data;
-};
+// Guarded to ensure the patch is only applied once.
+let _patched = false;
+function patchZodSchema() {
+  if (_patched) return;
+  _patched = true;
+  (zSessionNotification as any).parse = (data: unknown) => {
+    const result = zSessionNotification.safeParse(data);
+    if (result.success) return result.data;
+    return data;
+  };
+}
 
 export interface AvailableModel {
   modelId: string;
@@ -27,13 +33,15 @@ export async function createConnection(
   store: SessionStore,
   modelFlag?: { flag: string; value: string },
 ) {
+  patchZodSchema();
+
   const allArgs = modelFlag
     ? [...spawnArgs, modelFlag.flag, modelFlag.value]
     : spawnArgs;
   store.emit('connection-status', `Spawning ${executable}...`);
 
   const agentProcess = spawn(executable, allArgs, {
-    stdio: ['pipe', 'pipe', 'inherit'],
+    stdio: ['pipe', 'pipe', 'ignore'],
   });
 
   const input = Writable.toWeb(agentProcess.stdin!);
