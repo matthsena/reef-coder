@@ -1,5 +1,5 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from 'bun:test';
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { AgentClient } from './agent-client.ts';
 import { SessionStore } from './store.ts';
@@ -201,6 +201,19 @@ describe('AgentClient', () => {
         'Auto-accepting: "Allow" (allow) for Run command',
       );
     });
+
+    test('returns cancelled when options array is empty', async () => {
+      const handler = mock<(msg: string) => void>();
+      store.on('permission', handler);
+
+      const result = await client.requestPermission({
+        toolCall: { title: 'Run command' },
+        options: [],
+      } as any);
+
+      expect(result.outcome).toEqual({ outcome: 'cancelled' });
+      expect(handler).not.toHaveBeenCalled();
+    });
   });
 
   describe('workdir boundary checks', () => {
@@ -236,6 +249,16 @@ describe('AgentClient', () => {
           path: '/tmp/outside-workdir.txt',
           content: 'bad',
         } as any),
+      ).rejects.toThrow('Access denied');
+    });
+
+    test('readTextFile via symlink escaping workdir throws', async () => {
+      // Create a symlink inside workdir that points outside
+      const linkPath = join(workdir, 'escape-link');
+      await symlink('/etc/passwd', linkPath);
+
+      await expect(
+        client.readTextFile({ path: linkPath } as any),
       ).rejects.toThrow('Access denied');
     });
   });

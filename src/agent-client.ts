@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, realpath } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type * as acp from '@agentclientprotocol/sdk';
 import type { TerminalManager } from './terminal-manager.ts';
@@ -11,12 +11,25 @@ export class AgentClient implements acp.Client {
     private store: SessionStore,
   ) {}
 
-  private assertWithinWorkdir(targetPath: string): void {
+  private async assertWithinWorkdir(targetPath: string): Promise<void> {
     const resolved = resolve(targetPath);
     if (resolved !== this.workdir && !resolved.startsWith(this.workdir + '/')) {
       throw new Error(
         `Access denied: ${resolved} is outside workdir ${this.workdir}`,
       );
+    }
+    // Follow symlinks to prevent directory traversal escape
+    try {
+      const real = await realpath(resolved);
+      if (real !== this.workdir && !real.startsWith(this.workdir + '/')) {
+        throw new Error(
+          `Access denied: ${real} resolves outside workdir ${this.workdir}`,
+        );
+      }
+    } catch (err: unknown) {
+      // Path component doesn't exist yet (e.g. new files or parent dirs) — resolve check is sufficient
+      if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'ENOENT') return;
+      throw err;
     }
   }
 
@@ -67,7 +80,10 @@ export class AgentClient implements acp.Client {
   async requestPermission(
     params: acp.RequestPermissionRequest,
   ): Promise<acp.RequestPermissionResponse> {
-    const option = params.options[0]!;
+    const option = params.options[0];
+    if (!option) {
+      return { outcome: { outcome: 'cancelled' } };
+    }
     this.store.emit(
       'permission',
       `Auto-accepting: "${option.name}" (${option.kind}) for ${params.toolCall.title}`,
@@ -80,7 +96,7 @@ export class AgentClient implements acp.Client {
   async readTextFile(
     params: acp.ReadTextFileRequest,
   ): Promise<acp.ReadTextFileResponse> {
-    this.assertWithinWorkdir(params.path);
+    await this.assertWithinWorkdir(params.path);
     const content = await readFile(params.path, 'utf-8');
     return { content };
   }
@@ -88,7 +104,7 @@ export class AgentClient implements acp.Client {
   async writeTextFile(
     params: acp.WriteTextFileRequest,
   ): Promise<acp.WriteTextFileResponse> {
-    this.assertWithinWorkdir(params.path);
+    await this.assertWithinWorkdir(params.path);
     await writeFile(params.path, params.content, 'utf-8');
     return {};
   }
@@ -97,7 +113,7 @@ export class AgentClient implements acp.Client {
     params: acp.CreateTerminalRequest,
   ): Promise<acp.CreateTerminalResponse> {
     const cwd = params.cwd ?? this.workdir;
-    this.assertWithinWorkdir(cwd);
+    await this.assertWithinWorkdir(cwd);
     const terminalId = this.terminals.create(
       params.command,
       params.args ?? [],
@@ -128,7 +144,7 @@ export class AgentClient implements acp.Client {
   async releaseTerminal(
     params: acp.ReleaseTerminalRequest,
   ): Promise<acp.ReleaseTerminalResponse> {
-    this.terminals.release(params.terminalId);
+    await this.terminals.release(params.terminalId);
     return {};
   }
 }
