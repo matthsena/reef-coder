@@ -29,6 +29,17 @@ export function ModelSelect({
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  useInput((_input, key) => {
+    if (items.length === 0) return;
+    if (key.upArrow) {
+      setSelectedIndex((i) => (i > 0 ? i - 1 : items.length - 1));
+    } else if (key.downArrow) {
+      setSelectedIndex((i) => (i < items.length - 1 ? i + 1 : 0));
+    } else if (key.return && items[selectedIndex]) {
+      onSelect(items[selectedIndex].value);
+    }
+  });
+
   if (items.length === 0) {
     return (
       <Box flexDirection="column" paddingX={2} paddingY={1}>
@@ -39,16 +50,6 @@ export function ModelSelect({
       </Box>
     );
   }
-
-  useInput((_input, key) => {
-    if (key.upArrow) {
-      setSelectedIndex((i) => (i > 0 ? i - 1 : items.length - 1));
-    } else if (key.downArrow) {
-      setSelectedIndex((i) => (i < items.length - 1 ? i + 1 : 0));
-    } else if (key.return && items[selectedIndex]) {
-      onSelect(items[selectedIndex].value);
-    }
-  });
 
   return (
     <Box flexDirection="column" paddingX={2} paddingY={1}>
