@@ -3,7 +3,7 @@
   "checkpoint_id": "fc6723fc9346",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     "src/components/PromptInput.tsx",
     "src/hooks/useVoiceInput.ts",
@@ -23,13 +23,20 @@
       "context": "/fc/6723fc9346/1/context.md",
       "content_hash": "/fc/6723fc9346/1/content_hash.txt",
       "prompt": "/fc/6723fc9346/1/prompt.txt"
+    },
+    {
+      "metadata": "/fc/6723fc9346/2/metadata.json",
+      "transcript": "/fc/6723fc9346/2/full.jsonl",
+      "context": "/fc/6723fc9346/2/context.md",
+      "content_hash": "/fc/6723fc9346/2/content_hash.txt",
+      "prompt": "/fc/6723fc9346/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 267,
-    "cache_creation_tokens": 549069,
-    "cache_read_tokens": 24353674,
-    "output_tokens": 118967,
-    "api_call_count": 232
+    "input_tokens": 3266,
+    "cache_creation_tokens": 609015,
+    "cache_read_tokens": 26332282,
+    "output_tokens": 133054,
+    "api_call_count": 272
   }
 }
