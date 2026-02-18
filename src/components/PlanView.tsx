@@ -27,7 +27,7 @@ export function PlanView({ entries }: PlanViewProps) {
               ? 'yellow'
               : 'white';
         return (
-          <Text key={i}>
+          <Text key={`${i}:${entry.status}:${entry.content}`}>
             {'  '}
             <Text color={color}>{icon}</Text> {entry.content}
           </Text>

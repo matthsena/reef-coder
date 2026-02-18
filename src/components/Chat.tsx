@@ -55,7 +55,7 @@ export function Chat({
     <Box flexDirection="column">
       <Static items={messages}>
         {(msg, i) => (
-          <Box key={i} flexDirection="column">
+          <Box key={`${msg.timestamp}-${msg.role}-${i}`} flexDirection="column">
             <MessageBubble message={msg} />
           </Box>
         )}
