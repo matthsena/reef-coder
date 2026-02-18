@@ -1,0 +1,87 @@
+Implement the following plan:
+
+# Plano: Voice Input via Tab no PromptInput
+
+## Contexto
+
+O usuário quer adicionar input de voz ao chat: ao pressionar Tab durante a digitação do prompt, inicia gravação contínua com `arecord`; ao pressionar Tab novamente, para a gravação, transcreve com Whisper da OpenAI, e insere o texto transcrito no prompt. A feature precisa ter indicador visual explícito do estado de gravação.
+
+## Arquitetura
+
+Dois arquivos novos + modificação do PromptInput:
+
+```
+src/voice-input.ts          ← lógica de gravação (arecord) + transcrição (Whisper API)
+src/hooks/useVoiceInput.ts  ← hook React com state machine e cleanup
+src/components/PromptInput.tsx  ← modificar: useInput(Tab) + indicadores visuais
+```
+
+## Arquivos a Criar/Modificar
+
+### 1. `src/voice-input.ts` (NOVO)
+
+Funções puras sem dependência do React:
+
+- **`startRecording()`** — Spawna `arecord -f cd -t wav -q /tmp/voice-<timestamp>.wav`. Retorna `RecordingSession { filePath, process, exitPromise }`. Segue padrão do `terminal-manager.ts` com `spawn()` + `Promise.withResolvers()`.
+
+- **`stopRecording(session)`** — Envia `SIGINT` ao processo (SIGINT, não SIGTERM, para que o arecord finalize o header WAV corretamente). Aguarda exit. Retorna o filePath.
+
+- **`transcribeAudio(filePath)`** — Lê `OPENAI_API_KEY` de `process.env`. Usa `fetch` nativo do Bun para POST multipart/form-data em `https://api.openai.com/v1/audio/transcriptions` com `model: whisper-1`. Limpa o arquivo temp no `finally`. Retorna o texto transcrito.
+
+### 2. `src/hooks/useVoiceInput.ts` (NOVO)
+
+Hook com state machine de 3 estados:
+
+```
+idle  --[Tab]--> recording  --[Tab]--> transcribing  --[auto]--> idle
+```
+
+- Recebe callback `onTranscription(text: string)`
+- Retorna `{ voiceState, error, toggleRecording }`
+- Cleanup no unmount: mata processo arecord ativo
+- Erros são capturados e expostos via `error` state (auto-limpa no próximo toggle)
+
+### 3. `src/components/PromptInput.tsx` (MODIFICAR)
+
+Mudanças:
+- Importar `useInput` de `ink`, `Spinner` de `ink-spinner`, e o hook `useVoiceInput`
+- Adicionar `useInput` que captura `key.tab` (com `isActive: !disabled`) e chama `toggleRecording()`
+- Callback `handleTranscription` que faz `setValue(prev => prev + ' ' + text)`
+- Layout passa a ser `flexDirection="column"` para acomodar hint abaixo
+
+Indicadores visuais:
+- **Gravando**: spinner vermelho animado + texto "REC" em vermelho bold (inline após o input)
+- **Transcrevendo**: spinner amarelo + "transcribing..." em amarelo
+- **Erro**: `[voice error: <msg>]` em vermelho abaixo do input
+- **Idle (hint)**: `Tab: voice input` em dimColor abaixo do prompt
+
+### Tab Key — Sem Conflito
+
+O `ink-text-input` já ignora Tab explicitamente (retorna early no handler). O `useInput` do Ink permite múltiplos listeners independentes. Nosso handler recebe o Tab normalmente.
+
+## Sem Novas Dependências
+
+Tudo já existe no projeto ou no Bun:
+- `node:child_process` spawn (padrão usado em `terminal-manager.ts`)
+- `node:os` tmpdir, `node:fs/promises` unlink
+- `fetch` nativo do Bun + `Bun.file()`
+- `ink-spinner` (já é dependência)
+
+## Tratamento de Erros
+
+| Cenário | Comportamento |
+|---------|--------------|
+| `OPENAI_API_KEY` não definida | Erro exibido ao tentar transcrever |
+| `arecord` não instalado | Erro ENOENT no spawn, exibido no UI |
+| Erro da API Whisper | Status + body exibidos como erro |
+| Double-tap rápido no Tab | Gravação curta, Whisper retorna texto vazio/curto, inofensivo |
+
+## Verificação
+
+1. `bunx tsc --noEmit` — verificar types
+2. Teste manual: rodar `bun run index.ts`, ir até o chat, pressionar Tab, falar, Tab de novo, verificar texto inserido
+3. Verificar que o indicador REC aparece e desaparece
+4. Verificar cleanup: arquivo temp é deletado após transcrição
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/matheus/.REDACTED.jsonl
