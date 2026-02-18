@@ -1,0 +1,84 @@
+Implement the following plan:
+
+# Image Support via `@image:` File Path References
+
+## Context
+
+The codex-acp and claude-agent-acp agents declare `promptCapabilities.image: true` in their ACP handshake, meaning they accept image content blocks. However, the agent-swarm client currently only sends text, renders received images as `[image]`, and has no mechanism for users to attach images. The user wants to reference images by file path (similar to Claude Code) and have them sent as base64-encoded image content blocks.
+
+## Syntax
+
+Users reference images with `@image:path` in their message text:
+```
+describe this @image:./screenshot.png
+compare @image:/home/user/a.jpg and @image:../b.png
+```
+
+## Files to Modify
+
+### 1. `src/image-utils.ts` (new) — Image extraction and base64 encoding
+
+Two exported functions:
+
+**`extractImageRefs(text: string)`** — Returns `{ cleanText: string; paths: string[] }`. Uses a regex like `@image:(\S+)` to find all image references. `cleanText` has the `@image:...` tokens stripped (collapsed whitespace). `paths` is the raw path strings extracted.
+
+**`buildPromptBlocks(text: string, workdir: string)`** — `async`, returns `Promise<ContentBlock[]>`. Calls `extractImageRefs`, resolves each path against `workdir`, reads each file with `readFile` as a Buffer, base64-encodes, determines MIME from extension, and builds the content block array:
+- One `{ type: 'text', text: cleanText }` block (always first)
+- One `{ type: 'image', data: base64, mimeType }` block per successfully read image
+- If a file read fails, appends `[failed to read: path]` to the text block instead of crashing
+
+MIME mapping: `.png`→`image/png`, `.jpg`/`.jpeg`→`image/jpeg`, `.gif`→`image/gif`, `.webp`→`image/webp`, `.bmp`→`image/bmp`, `.svg`→`image/svg+xml`
+
+When no `@image:` refs are found, returns `[{ type: 'text', text }]` (current behavior, no overhead).
+
+### 2. `src/components/Chat.tsx` — Use `buildPromptBlocks`
+
+- Add `workdir: string` to `ChatProps`
+- In `handleSubmit` (line 47-50), replace:
+  ```ts
+  prompt: [{ type: 'text', text }],
+  ```
+  with:
+  ```ts
+  prompt: await buildPromptBlocks(text, workdir),
+  ```
+- Import `buildPromptBlocks` from `../image-utils.ts`
+
+### 3. `src/components/App.tsx` — Pass `workdir` to Chat
+
+Add `workdir={workdir}` to the `<Chat ... />` rendering (~line 214).
+
+### 4. `src/hooks/useSessionStore.ts` — Update `addUserMessage` for image indicators
+
+Update `addUserMessage` to detect `@image:` references in the text and annotate the displayed user message with `[attached: filename]` indicators. The raw text with `@image:` tokens is shown to the user (so they know what was sent), but we could also clean it and add indicators. Simplest: keep the raw text as-is in the displayed message — the `@image:` tokens already serve as visual indicators.
+
+Actually, simplest approach: just show the user text as-is (with `@image:` tokens). No changes needed to MessageBubble or useSessionStore.
+
+### 5. Tests
+
+**`src/image-utils.test.ts`** (new):
+- `extractImageRefs`: no refs returns original text + empty paths; single ref; multiple refs; relative and absolute paths; handles edge cases (no space after path, punctuation)
+- `buildPromptBlocks`: text-only (no refs) returns single text block; with valid image file (use temp file) returns text + image blocks; with missing file returns text block with error annotation; MIME type mapping correctness
+
+**`src/components/Chat.test.tsx`**: Add `workdir` prop to all existing `<Chat>` renders (e.g. `workdir="/tmp"`). Add test that image references trigger prompt with image content blocks.
+
+**`src/components/App.test.tsx`**: No changes needed — `workdir` is already passed as a prop to `<App>`.
+
+## Verification
+
+1. `bunx tsc --noEmit` — type check passes
+2. `bun test` — all tests pass
+3. Manual: `bun run index.ts`, connect to an engine, type `describe @image:./some-image.png`, verify prompt is sent with image content block
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/matheus/.REDACTED.jsonl
+
+---
+
+olha funcionou!!! porem quando o nome esta assim: @image:/home/matheus/Pictures/Screenshot from
+  2026-01-23 17-36-19.png
+ele nao encontra... vc pode fazer uma forma de corrigir isso? talvez passando o caminho entre aspas simples
+
+---
+
+olha... pode comittar tudo em grupos semanticos, sem voce como coauthor
