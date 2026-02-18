@@ -1,0 +1,106 @@
+Implement the following plan:
+
+# Gemini CLI: Predefined Model Selection
+
+## Context
+
+When selecting Gemini CLI as the engine, users currently see a free-text "Enter model name:" prompt (`ModelInput` component) because Gemini CLI doesn't return `availableModels` via ACP — it only supports a `-m` CLI flag. The user wants to pick from predefined flash/pro options instead of typing a model name manually.
+
+## Approach
+
+Add a `predefinedModels` field to `EngineConfig` so engines that use `modelFlag` can still show the `ModelSelect` picker screen. The Gemini config will list the known models. `App.tsx` routing logic gets a new priority: `ACP models > predefinedModels > modelFlag text input > direct to chat`.
+
+## Files to Modify
+
+### 1. `src/types.ts` — Add `predefinedModels` to `EngineConfig`
+
+Add optional field:
+```ts
+export interface EngineConfig {
+  executable: string;
+  args: string[];
+  model: string;
+  modelFlag?: string;
+  /** Predefined model list for the selection screen when the engine
+   *  doesn't provide models via ACP but supports a model CLI flag. */
+  predefinedModels?: string[];
+}
+```
+
+Update the `gemini` entry:
+```ts
+gemini: {
+  executable: 'gemini',
+  args: ['--experimental-acp'],
+  model: 'gemini-2.5-flash',
+  modelFlag: '-m',
+  predefinedModels: [
+    'gemini-2.5-flash',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash-lite',
+    'gemini-3-flash-preview',
+    'gemini-3-pro-preview',
+  ],
+},
+```
+
+### 2. `src/components/App.tsx` — Route predefinedModels to model-select screen
+
+In the connection `.then()` callback (~line 67), add a branch for `predefinedModels`:
+
+```ts
+if (result.availableModels.length > 0) {
+  // Engine provides model list via ACP
+  setScreen('model-select');
+} else if (engineCfg.predefinedModels && engineCfg.predefinedModels.length > 0) {
+  // Engine has predefined models — show picker, use modelFlag for spawning
+  setAvailableModels(engineCfg.predefinedModels.map(id => ({ modelId: id })));
+  setCurrentModelId(result.currentModelId ?? engineCfg.model);
+  setScreen('model-select');
+} else if (engineCfg.modelFlag) {
+  // Engine accepts CLI model flag but no predefined list — free text input
+  setScreen('model-input');
+} else {
+  // No model selection — proceed with engine default
+  setModel(result.currentModelId ?? engineCfg.model);
+  setScreen('chat');
+}
+```
+
+In `handleModelSelect` (~line 92): when the engine has `modelFlag`, use the reconnect path (tear down + re-spawn with `-m`) instead of the ACP `setSessionModel` path:
+
+```ts
+const handleModelSelect = useCallback(
+  (selectedModel: string) => {
+    if (!conn) return;
+    const engineCfg = ENGINES[engine]!;
+
+    // If engine uses modelFlag, reconnect with the flag instead of ACP set_model
+    if (engineCfg.modelFlag) {
+      handleModelInput(selectedModel);
+      return;
+    }
+
+    // Original ACP-based model selection logic...
+    setModel(selectedModel);
+    ...
+  },
+  [conn, store, engine, handleModelInput],
+);
+```
+
+Note: `handleModelInput` already handles the full reconnect-with-modelFlag flow. We just delegate to it.
+
+### 3. Update tests
+
+- **`src/types.test.ts`**: Add assertion that `gemini` config has `predefinedModels` array with expected entries
+- **`src/components/App.test.tsx`**: Add test for the `predefinedModels` path: Gemini selection → connecting → model-select (with predefined models) → pick model → reconnecting → chat
+
+## Verification
+
+1. `bunx tsc --noEmit` — type check passes
+2. `bun test` — all 177+ tests pass, new tests pass
+3. Manual: `bun run index.ts`, select Gemini CLI, verify model picker shows flash/pro options instead of text input
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/matheus/.REDACTED.jsonl
