@@ -311,7 +311,7 @@ describe('App E2E', () => {
     expect(lastFrame()!).toContain('OpenCode');
   });
 
-  test('model-input reconnect error shows error message', async () => {
+  test('model-input reconnect error recovers to model-input screen', async () => {
     // First call succeeds (initial connect), second call rejects (reconnect)
     let callCount = 0;
     mockCreateConnection.mockImplementation(
@@ -347,14 +347,15 @@ describe('App E2E', () => {
     stdin.write(ENTER);
     await Bun.sleep(W);
 
-    // The reconnect rejects immediately
+    // The reconnect rejects immediately — app recovers to model-input
     await Bun.sleep(W);
 
     const frame = lastFrame()!;
-    expect(frame).toContain('Error: Reconnect failed');
+    expect(frame).toContain('Enter model name:');
+    expect(frame).toContain('Gemini CLI');
   });
 
-  test('model-select error shows error message', async () => {
+  test('model-select error recovers to model-select screen', async () => {
     mockSetSessionModelFn.mockImplementationOnce(() =>
       Promise.reject(new Error('Model not found')),
     );
@@ -375,7 +376,9 @@ describe('App E2E', () => {
     stdin.write(ENTER);
     await Bun.sleep(W);
 
+    // Error recovers to model-select screen
     const frame = lastFrame()!;
-    expect(frame).toContain('Error setting model: Model not found');
+    expect(frame).toContain('Select model:');
+    expect(frame).toContain('bad-model');
   });
 });

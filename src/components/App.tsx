@@ -74,6 +74,7 @@ export function App({ workdir }: AppProps) {
         }
       })
       .catch((err: unknown) => {
+        connectingRef.current = false;
         setStatusMessages((prev) => [...prev, `Error: ${formatError(err)}`]);
       });
 
@@ -89,13 +90,24 @@ export function App({ workdir }: AppProps) {
       setModel(selectedModel);
       setScreen('connecting');
       setStatusMessages((prev) => [...prev, `Setting model to ${selectedModel}...`]);
+
+      const onStatus = (msg: string) => {
+        setStatusMessages((prev) => [...prev, msg]);
+      };
+      store.on('connection-status', onStatus);
+
       setSessionModel(conn.connection, conn.sessionId, selectedModel, store)
-        .then(() => setScreen('chat'))
+        .then(() => {
+          store.off('connection-status', onStatus);
+          setScreen('chat');
+        })
         .catch((err: unknown) => {
+          store.off('connection-status', onStatus);
           setStatusMessages((prev) => [
             ...prev,
             `Error setting model: ${formatError(err)}`,
           ]);
+          setScreen('model-select');
         });
     },
     [conn, store],
@@ -136,10 +148,12 @@ export function App({ workdir }: AppProps) {
         setConn(result);
         setScreen('chat');
       } catch (err: unknown) {
+        connectingRef.current = false;
         setStatusMessages((prev) => [
           ...prev,
           `Error: ${formatError(err)}`,
         ]);
+        setScreen('model-input');
       } finally {
         store.off('connection-status', onStatus);
       }
