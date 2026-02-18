@@ -3,7 +3,7 @@
   "checkpoint_id": "0f9f9fab3974",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     "src/agent-client.ts",
     "src/components/Chat.tsx"
@@ -22,13 +22,20 @@
       "context": "/0f/9f9fab3974/1/context.md",
       "content_hash": "/0f/9f9fab3974/1/content_hash.txt",
       "prompt": "/0f/9f9fab3974/1/prompt.txt"
+    },
+    {
+      "metadata": "/0f/9f9fab3974/2/metadata.json",
+      "transcript": "/0f/9f9fab3974/2/full.jsonl",
+      "context": "/0f/9f9fab3974/2/context.md",
+      "content_hash": "/0f/9f9fab3974/2/content_hash.txt",
+      "prompt": "/0f/9f9fab3974/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 3255,
-    "cache_creation_tokens": 599933,
-    "cache_read_tokens": 26073405,
-    "output_tokens": 130566,
-    "api_call_count": 263
+    "input_tokens": 3566,
+    "cache_creation_tokens": 745668,
+    "cache_read_tokens": 38264464,
+    "output_tokens": 174191,
+    "api_call_count": 394
   }
 }
