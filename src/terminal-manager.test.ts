@@ -65,22 +65,22 @@ describe('TerminalManager', () => {
   test('release removes terminal and kills if still running', async () => {
     const tm = new TerminalManager();
     const id = tm.create('sleep', ['60'], '/tmp');
-    tm.release(id);
+    await tm.release(id);
     // After release, getting output should throw
     expect(() => tm.getOutput(id)).toThrow(`Terminal ${id} not found`);
   });
 
-  test('release is a no-op for non-existent terminal', () => {
+  test('release is a no-op for non-existent terminal', async () => {
     const tm = new TerminalManager();
     // Should not throw
-    tm.release('term-999');
+    await tm.release('term-999');
   });
 
   test('release on already-exited terminal removes without error', async () => {
     const tm = new TerminalManager();
     const id = tm.create('echo', ['done'], '/tmp');
     await tm.waitForExit(id);
-    tm.release(id);
+    await tm.release(id);
     expect(() => tm.getOutput(id)).toThrow();
   });
 
@@ -99,6 +99,17 @@ describe('TerminalManager', () => {
     const result = tm.getOutput(id);
     expect(result.output.length).toBeGreaterThan(0);
     expect(result.output).toContain('nonexistent_path_xyz_test_12345');
+  });
+
+  test('output truncated flag is set when output exceeds 1 MB', async () => {
+    const tm = new TerminalManager();
+    // Generate more than 1MB of output using yes piped through head
+    // yes outputs "y\n" repeatedly; head -c limits bytes
+    const id = tm.create('head', ['-c', '1100000', '/dev/zero'], '/tmp');
+    await tm.waitForExit(id);
+    const result = tm.getOutput(id);
+    expect(result.truncated).toBe(true);
+    expect(result.output.length).toBeLessThanOrEqual(1024 * 1024);
   });
 
   test('captures both stdout and stderr streams', async () => {
