@@ -1,0 +1,416 @@
+Implement the following plan:
+
+# Comprehensive E2E and Unit Tests for agent-swarm
+
+## Context
+
+The project has zero tests. The user wants automated end-to-end tests for the engine selector and model selector, plus maximum code coverage across the entire codebase.
+
+## Setup
+
+1. Install `ink-testing-library` as dev dependency: `bun add -d ink-testing-library`
+2. All tests use `bun:test` (built-in, Jest-compatible API)
+3. Test files colocated with source: `src/**/*.test.ts` / `src/**/*.test.tsx`
+4. Run: `bun test` / Coverage: `bun test --coverage`
+
+## Test Files (18 files, ~144 test cases)
+
+### Core Logic
+
+| # | File | Source | Tests |
+|---|------|--------|-------|
+| 1 | `src/types.test.ts` | `types.ts` | Engine config completeness, labels/colors consistency, modelFlag isolation |
+| 2 | `src/store.test.ts` | `store.ts` | All 8 event types emit/receive, unsubscribe works |
+| 3 | `src/terminal-manager.test.ts` | `terminal-manager.ts` | Real child processes: create, getOutput, waitForExit, kill, release, error cases |
+| 4 | `src/agent-client.test.ts` | `agent-client.ts` | sessionUpdate routing (6 update types), requestPermission auto-accept, workdir boundary checks, file ops, terminal delegation |
+| 5 | `src/connection.test.ts` | `connection.ts` | Mock spawn+ACP SDK: spawn args, modelFlag injection, status emissions, return shape, shutdown, setSessionModel |
+
+### Hooks
+
+| # | File | Source | Tests |
+|---|------|--------|-------|
+| 6 | `src/hooks/useSessionStore.test.tsx` | `useSessionStore.ts` | Chunk accumulation, tool calls, thoughts, plans, turn-end finalization, cleanup on unmount |
+
+### UI Components
+
+| # | File | Source | Tests |
+|---|------|--------|-------|
+| 7 | `src/components/EngineSelect.test.tsx` | `EngineSelect.tsx` | Render all engines sorted, keyboard nav (up/down/wrap), enter selects correct key |
+| 8 | `src/components/ModelSelect.test.tsx` | `ModelSelect.tsx` | Model list, current model marking, keyboard nav, selection callback |
+| 9 | `src/components/ModelInput.test.tsx` | `ModelInput.tsx` | Default value, submit, empty rejection, engine branding |
+| 10 | `src/components/Connecting.test.tsx` | `Connecting.tsx` | Spinner, engine label, status messages |
+| 11 | `src/components/MessageBubble.test.tsx` | `MessageBubble.tsx` | User/agent rendering, thoughts, tool calls, plan, timestamp |
+| 12 | `src/components/ToolCallCard.test.tsx` | `ToolCallCard.tsx` | Status icons (⏳/✓/✗/•), title display |
+| 13 | `src/components/ThoughtBlock.test.tsx` | `ThoughtBlock.tsx` | Thought emoji+text, empty returns null |
+| 14 | `src/components/PlanView.test.tsx` | `PlanView.tsx` | Status icons (✓/◉/○), multiple entries, empty returns null |
+| 15 | `src/components/StatusBar.test.tsx` | `StatusBar.tsx` | Engine label, model, truncated session ID |
+| 16 | `src/components/PromptInput.test.tsx` | `PromptInput.tsx` | Enabled/disabled states, waiting message |
+| 17 | `src/components/Chat.test.tsx` | `Chat.tsx` | StatusBar rendering, prompt input, message display |
+
+### E2E (Primary Request)
+
+| # | File | Source | Tests |
+|---|------|--------|-------|
+| 18 | `src/components/App.test.tsx` | `App.tsx` | **Full screen flow**: engine-select → connecting → model-select → chat, engine-select → connecting → model-input → reconnect → chat, direct-to-chat path, error handling, keyboard navigation through entire flow |
+
+## Implementation Order
+
+1. `types.test.ts` — pure data, no deps
+2. `store.test.ts` — foundation for event tests
+3. `terminal-manager.test.ts` — standalone, real processes
+4. `agent-client.test.ts` — uses store + terminal concepts
+5. `ThoughtBlock.test.tsx` — simplest component, validates ink-testing-library setup
+6. `ToolCallCard.test.tsx`, `PlanView.test.tsx`, `StatusBar.test.tsx` — simple components
+7. `PromptInput.test.tsx`, `MessageBubble.test.tsx`, `Connecting.test.tsx` — medium components
+8. `EngineSelect.test.tsx` — keyboard nav (user's primary request)
+9. `ModelSelect.test.tsx` — keyboard nav (user's primary request)
+10. `ModelInput.test.tsx` — text input
+11. `useSessionStore.test.tsx` — hook with wrapper component
+12. `connection.test.ts` — heavy mocking
+13. `Chat.test.tsx` — integration
+14. `App.test.tsx` — full E2E (user's primary request)
+
+## Key Technical Patterns
+
+**Keyboard input codes:**
+```
+ARROW_UP = '\x1B[A'  ARROW_DOWN = '\x1B[B'  ENTER = '\r'
+```
+
+**After stdin.write():** always `await Bun.sleep(50)` for React render cycle
+
+**Mocking connection.ts for App E2E:**
+```ts
+mock.module('../connection.ts', () => ({
+  createConnection: mock(() => Promise.resolve({
+    connection: { prompt: mock(), unstable_setSessionModel: mock() },
+    sessionId: 'test-session', availableModels: [...], shutdown: mock(),
+  })),
+  setSessionModel: mock(() => Promise.resolve()),
+}));
+```
+
+**Sorted engine order:** Claude Code (0), Codex (1), Gemini CLI (2), GitHub Copilot CLI (3), OpenCode (4), Qwen Code (5)
+
+## Verification
+
+1. `bunx tsc --noEmit` — type check passes
+2. `bun test` — all tests pass
+3. `bun test --coverage` — verify high coverage
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/matheus/.REDACTED.jsonl
+
+---
+
+✗ PromptInput > renders input area when enabled [61.00ms]
+✗ ModelSelect > navigate up from first and select last model [132.00ms]
+✗ EngineSelect > arrow down moves selection to next item [95.00ms]
+
+ 168 pass
+ 3 fail
+
+---
+
+so commit each single test without you as coauthor
+
+---
+
+its possible get 100% of test coverage?
+
+---
+
+so use codereviwer agent to check my full code
+
+---
+
+you can fix all bugs please and test until and make code reviews until fix all! after this commit every thing without you as coauthor
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the entire conversation:
+
+1. **Initial Request**: User asked to implement a comprehensive E2E and unit test suite for the agent-swarm project based on a detailed plan with 18 test files and ~144 test cases.
+
+2. **My Approach**: 
+   - Read all source files first to understand the codebase
+   - Installed `ink-testing-library` as dev dependency
+   - Created all 18 test files in order specified by the plan
+   - Fixed TypeScript errors (unused imports, unused variables, mock typing issues)
+   - Fixed test failures (terminal stderr tests, connection.ts mocking, timing issues)
+   - Iteratively increased sleep times to fix flaky tests under coverage mode
+
+3. **Key Errors and Fixes**:
+   - Unused `React` imports in tsx test files - removed them since `jsxImportSource: "react"` handles JSX
+   - Unused `unlink`, `EngineConfig`, `ARROW_UP`, `mockSetSessionModel` variables - removed
+   - `mock.calls[0]` type error - cast to `unknown[]`
+   - `node:stream` mock leaking across test files breaking `PassThrough` import - rewrote connection.test.ts to use real `PassThrough` streams instead of mocking `node:stream`
+   - `ClientSideConnection` mock constructor not returning proper instance - changed to class-based mock
+   - Terminal stderr tests failing due to `shell: true` double-wrapping - changed to use `ls /nonexistent` for stderr
+   - Timing flakes in ink component tests - added initial render waits and increased `Bun.sleep` from 50ms to 100-250ms
+   - `mockImplementation` leaking between App E2E tests - added `mockImplementation` reset in `beforeEach`
+
+4. **User then asked to commit each test individually without co-author** - I created 19 commits (1 dep + 18 test files)
+
+5. **User asked if 100% coverage was possible** - I identified uncovered lines:
+   - Chat.tsx lines 34-36: exit/quit handler
+   - App.tsx lines 138-140: modelInput reconnect error
+   - connection.ts lines 13-15: zod monkey-patch (unreachable due to mocking)
+   - App.tsx lines 52, 123: closure definitions (bun coverage quirk)
+   
+   Added tests for Chat exit/quit and App reconnect error, reaching 99.66% coverage. Committed those too.
+
+6. **User asked to run code reviewer agent** - I launched the code-reviewer agent which found 21 issues across critical/high/medium/low severity.
+
+7. **User asked to fix ALL bugs, test, code review again until clean, then commit without co-author** - This is the current pending task.
+
+8. **I was in the process of reading all source files to begin fixing** when the summary was requested. I had read all 12 source files and was about to start making edits.
+
+Let me now list the specific findings that need to be fixed:
+
+**Critical:**
+- CRIT-1: `shell: true` in terminal-manager.ts line 20
+- CRIT-2: `path.resolve` instead of `realpath` in agent-client.ts lines 14-21
+- CRIT-3: Auto-accept permissions with no guard for empty options
+
+**High:**
+- HIGH-1: Unhandled promise rejection in Chat.tsx handleSubmit
+- HIGH-2: Unbounded output buffer in terminal-manager.ts
+- HIGH-3: connectingRef never reset in App.tsx
+- HIGH-4: Global monkey-patch of zod schema in connection.ts
+- HIGH-5: --workdir crash on missing arg in index.ts
+
+**Medium:**
+- MED-1: Empty agent messages finalized on immediate turn-end
+- MED-2: handleModelSelect status listener gap
+- MED-3: Async callbacks where sync expected
+- MED-4: Untyped status strings
+- MED-5: release() race condition
+- MED-6: Array index as React key
+- MED-7: Unvalidated workdir symlinks
+
+**Low:**
+- LOW-1: requestPermission crash on empty options
+- LOW-2: Locale timestamp instead of ISO
+- LOW-3: No setMaxListeners
+- LOW-4: Untyped onSelect callback
+- LOW-5: Agent stderr corrupts TUI
+- LOW-6: Unused ink-select-input dependency
+
+The user also sent what appears to be an accidental keyboard input: `}P `ÇOoooooooooooo`
+
+Current state: All 18 test files exist, 174 tests pass, 99.66% coverage. The task to fix all code review bugs is in progress but no fixes have been applied yet.
+
+Summary:
+1. Primary Request and Intent:
+   - **First request**: Implement a comprehensive test suite (18 files, ~144 test cases) for the agent-swarm project following a detailed plan. The plan specified E2E tests for engine selector and model selector, plus maximum code coverage. Tests should use `bun:test` and `ink-testing-library`.
+   - **Second request**: Commit each single test file individually without co-author tag.
+   - **Third request**: Check if 100% test coverage is possible (answered: effectively yes, remaining gaps are tooling artifacts).
+   - **Fourth request**: Run the code-reviewer agent to check the full codebase.
+   - **Fifth request (current/pending)**: "you can fix all bugs please and test until and make code reviews until fix all! after this commit every thing without you as coauthor" — Fix ALL code review findings, run tests, re-review in a loop until clean, then commit each fix individually without co-author.
+
+2. Key Technical Concepts:
+   - **Bun runtime** with `bun:test` (Jest-compatible API), `bun test --coverage`
+   - **Ink** (React for terminal) with `ink-testing-library` for component testing
+   - **Agent Client Protocol (ACP)** SDK for agent communication
+   - **EventEmitter-based SessionStore** bridging ACP callbacks to React state
+   - **`useInput` hook** from Ink for keyboard navigation (arrow keys: `\x1B[A`, `\x1B[B`, enter: `\r`)
+   - **`mock.module()`** for mocking ES modules in bun
+   - **`Bun.sleep()`** for waiting on React/Ink render cycles in tests
+   - **`shell: true`** in `spawn()` — identified as command injection vulnerability
+   - **`path.resolve` vs `fs.realpath`** — symlink traversal vulnerability
+   - React key patterns, async callback typing, EventEmitter max listeners
+
+3. Files and Code Sections:
+
+   **Source files (no changes made yet for bug fixes):**
+   
+   - `index.ts` — Entry point. Has HIGH-5 bug: `--workdir` as last arg causes crash due to `process.argv[workdirIndex + 1]!` being undefined.
+   ```typescript
+   const workdirIndex = process.argv.indexOf('--workdir');
+   const workdir = workdirIndex !== -1
+     ? resolve(process.argv[workdirIndex + 1]!)  // crashes if --workdir is last arg
+     : process.cwd();
+   ```
+
+   - `src/types.ts` — Shared types. MED-4: `ToolCallEntry.status` and `PlanEntry.status` are untyped `string` instead of union types.
+   ```typescript
+   export interface ToolCallEntry {
+     id: string;
+     title: string;
+     status: string;  // should be union type
+   }
+   export interface PlanEntry {
+     status: string;  // should be union type
+     content: string;
+   }
+   ```
+
+   - `src/terminal-manager.ts` — CRIT-1: `shell: true` enables command injection. HIGH-2: unbounded output buffer. MED-5: `release()` deletes before process exits.
+   ```typescript
+   const proc = spawn(command, args, {
+     cwd,
+     shell: true,  // CRIT-1: command injection
+     stdio: ['ignore', 'pipe', 'pipe'],
+   });
+   // HIGH-2: no output cap
+   stream?.on('data', (chunk: Buffer) => { terminal.output += chunk.toString(); });
+   ```
+
+   - `src/agent-client.ts` — CRIT-2: symlink traversal via `resolve()` instead of `realpath()`. CRIT-3/LOW-1: auto-accepts permissions, crashes on empty options.
+   ```typescript
+   private assertWithinWorkdir(targetPath: string): void {
+     const resolved = resolve(targetPath);  // CRIT-2: doesn't follow symlinks
+     if (resolved !== this.workdir && !resolved.startsWith(this.workdir + '/')) {
+       throw new Error(`Access denied: ${resolved} is outside workdir ${this.workdir}`);
+     }
+   }
+   async requestPermission(params: acp.RequestPermissionRequest) {
+     const option = params.options[0]!;  // LOW-1: crashes if empty
+   }
+   ```
+
+   - `src/connection.ts` — HIGH-4: global monkey-patch of zod schema. LOW-5: agent stderr inherited corrupts TUI.
+   ```typescript
+   (zSessionNotification as any).parse = (data: unknown) => {
+     const result = zSessionNotification.safeParse(data);
+     if (result.success) return result.data;
+     return data;  // silently returns unvalidated data
+   };
+   const agentProcess = spawn(executable, allArgs, {
+     stdio: ['pipe', 'pipe', 'inherit'],  // LOW-5: stderr corrupts Ink TUI
+   });
+   ```
+
+   - `src/components/Chat.tsx` — HIGH-1: unhandled promise rejection in handleSubmit.
+   ```typescript
+   const handleSubmit = useCallback(
+     async (text: string) => {
+       addUserMessage(text);
+       const result = await connection.prompt({...}); // if this rejects, UI stuck forever
+       store.emit('turn-end', result.stopReason);
+     }, [...]
+   );
+   ```
+
+   - `src/components/App.tsx` — HIGH-3: `connectingRef` never reset to false.
+   ```typescript
+   const connectingRef = useRef(false);
+   useEffect(() => {
+     if (screen !== 'connecting' || !engine || conn || connectingRef.current) return;
+     connectingRef.current = true;  // never reset
+   ```
+
+   - `src/hooks/useSessionStore.ts` — MED-1: empty messages finalized on immediate turn-end. LOW-2: locale-specific timestamps. LOW-3: no setMaxListeners.
+
+   - `src/components/Connecting.tsx` — MED-6: array index as React key (line 25).
+   - `src/components/PlanView.tsx` — MED-6: array index as React key (line 30).
+   - `src/components/EngineSelect.tsx` — LOW-4: `onSelect` untyped string instead of `EngineKey`.
+   - `package.json` — LOW-6: unused `ink-select-input` dependency.
+
+   **Test files created (18 files, 174 tests, 99.66% coverage):**
+   - `src/types.test.ts` — 12 tests
+   - `src/store.test.ts` — 11 tests
+   - `src/terminal-manager.test.ts` — 12 tests
+   - `src/agent-client.test.ts` — 16 tests
+   - `src/connection.test.ts` — 6 tests (uses mock.module for spawn and ACP SDK)
+   - `src/hooks/useSessionStore.test.tsx` — 11 tests (RENDER_WAIT=250ms)
+   - `src/components/ThoughtBlock.test.tsx` — 3 tests
+   - `src/components/ToolCallCard.test.tsx` — 6 tests
+   - `src/components/PlanView.test.tsx` — 7 tests
+   - `src/components/StatusBar.test.tsx` — 6 tests
+   - `src/components/PromptInput.test.tsx` — 6 tests (RENDER_WAIT=100ms)
+   - `src/components/MessageBubble.test.tsx` — 10 tests
+   - `src/components/Connecting.test.tsx` — 6 tests
+   - `src/components/EngineSelect.test.tsx` — 11 tests (RENDER_WAIT=100ms)
+   - `src/components/ModelSelect.test.tsx` — 11 tests (RENDER_WAIT=100ms)
+   - `src/components/ModelInput.test.tsx` — 8 tests
+   - `src/components/Chat.test.tsx` — 8 tests (RENDER_WAIT=250ms)
+   - `src/components/App.test.tsx` — 14 tests (W=200ms, uses deferred promises for connection control)
+
+4. Errors and Fixes:
+   - **Unused React imports in all .tsx test files**: Removed `import React from 'react'` since `jsxImportSource: "react"` in tsconfig handles JSX automatically.
+   - **`node:stream` mock leaking across test files**: The `mock.module('node:stream', ...)` in connection.test.ts broke `PassThrough` import for ink-testing-library in ALL other test files. Fixed by removing the stream mock entirely and using real `PassThrough` streams for fake stdin/stdout.
+   - **`ClientSideConnection` mock not working**: `mock(function(this: any) { this.initialize = ... })` didn't produce proper instances. Fixed by using a class-based mock: `class MockClientSideConnection { initialize = mockInitialize; ... }`.
+   - **Terminal stderr tests failing**: `spawn('sh', ['-c', 'echo error >&2'], { shell: true })` double-wraps in shell, breaking redirection. Fixed by using `ls /nonexistent_path` which naturally writes to stderr.
+   - **Timing flakes in ink component tests**: Initial `Bun.sleep(50)` was too short for React/Ink render cycles. Fixed by adding initial render waits after `render()` and increasing sleeps to 100-250ms. Under `--coverage` mode (slower), needed even higher values.
+   - **`mockImplementation` leaking between App E2E tests**: `mockClear()` only clears call history, not implementation. Fixed by resetting `mockImplementation` in `beforeEach` to restore the deferred promise pattern.
+   - **`mock.calls[0]` type error**: Tuple type `[]` has no element at index 0. Fixed by casting: `mockCreateConnection.mock.calls[0] as unknown[]`.
+
+5. Problem Solving:
+   - Successfully created a complete test suite from zero tests to 174 tests with 99.66% line coverage
+   - Solved complex mocking challenges for ACP SDK, child_process spawn, and node:stream
+   - Solved ink-testing-library timing issues for keyboard navigation and async state updates
+   - Identified and documented 21 code quality/security issues via code review agent
+   - The remaining ~0.34% uncovered lines are: connection.ts zod monkey-patch (unreachable due to module mocking), App.tsx closure definitions inside hooks (bun coverage instrumentation quirk)
+
+6. All User Messages:
+   - "Implement the following plan: [detailed plan for 18 test files with ~144 test cases]"
+   - "so commit each single test without you as coauthor"
+   - "✗ PromptInput > renders input area when enabled [61.00ms] ✗ ModelSelect > navigate up from first and select last model [132.00ms] ✗ EngineSelect > arrow down moves selection to next item [95.00ms] 168 pass 3 fail" (reporting flaky tests)
+   - "its possible get 100% of test coverage?"
+   - "so use codereviwer agent to check my full code"
+   - "you can fix all bugs please and test until and make code reviews until fix all! after this commit every thing without you as coauthor"
+   - "}P `ÇOoooooooooooo" (appears to be accidental keyboard input)
+
+7. Pending Tasks:
+   - **Fix ALL 21 code review findings** (critical through low severity)
+   - **Run tests after fixes** to ensure nothing breaks
+   - **Run code reviewer again** to verify all issues resolved
+   - **Repeat test/review cycle** until clean
+   - **Commit each fix individually** without co-author tag
+   - Task #1 in task list: "Fix all code review findings and verify" (status: in_progress)
+
+8. Current Work:
+   I had just finished reading ALL 12 source files needed for the bug fixes. I read: `index.ts`, `src/terminal-manager.ts`, `src/agent-client.ts`, `src/connection.ts`, `src/components/Chat.tsx`, `src/components/App.tsx`, `src/types.ts`, `src/hooks/useSessionStore.ts`, `src/components/Connecting.tsx`, `src/components/PlanView.tsx`, `src/components/EngineSelect.tsx`, and `package.json`. I was about to start applying the fixes when the conversation was summarized.
+
+   The user's exact request was: "you can fix all bugs please and test until and make code reviews until fix all! after this commit every thing without you as coauthor"
+
+9. Optional Next Step:
+   Begin applying fixes to source files in priority order (critical first), starting with:
+   1. **CRIT-1**: Remove `shell: true` from `src/terminal-manager.ts` line 20
+   2. **CRIT-2**: Replace `path.resolve` with `fs.realpath` in `src/agent-client.ts` `assertWithinWorkdir`
+   3. **LOW-1/CRIT-3**: Guard empty options in `requestPermission`
+   4. **HIGH-1**: Add `.catch()` to `connection.prompt()` in `src/components/Chat.tsx`
+   5. **HIGH-2**: Add output size cap in `src/terminal-manager.ts`
+   6. Continue through all 21 findings...
+   
+   Then update tests to match, run `bun test --coverage` and `bunx tsc --noEmit`, run code reviewer agent again, and repeat until clean. Finally commit each fix without co-author.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/matheus/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+ok now run code reviewer agent again
+
+---
+
+ok now run code reviewer agent again
+
+---
+
+yes fix them all and commit each fix without you as coauthor
+
+---
+
+ok now run again the code reviewer agent!
+
+---
+
+yes fix all and commit without coauthor
+
+---
+
+make again code review
+
+---
+
+so always i send a message the header go down... i want fix it in the top! fixed
+
+---
+
+[Image: source: /home/matheus/Pictures/Screenshot from 2026-02-18 10-35-45.png]
