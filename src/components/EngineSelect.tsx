@@ -22,8 +22,8 @@ export function EngineSelect({ onSelect }: EngineSelectProps) {
       setSelectedIndex((i) => (i > 0 ? i - 1 : items.length - 1));
     } else if (key.downArrow) {
       setSelectedIndex((i) => (i < items.length - 1 ? i + 1 : 0));
-    } else if (key.return) {
-      onSelect(items[selectedIndex]!.value);
+    } else if (key.return && items[selectedIndex]) {
+      onSelect(items[selectedIndex].value);
     }
   });
 
