@@ -3,17 +3,23 @@
   "checkpoint_id": "78f7b1f0be0a",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 2,
+  "checkpoints_count": 5,
   "files_touched": [
+    "CLAUDE.md",
+    "README.md",
     "src/components/App.test.tsx",
+    "src/components/App.tsx",
+    "src/components/Chat.test.tsx",
     "src/components/Connecting.test.tsx",
     "src/components/EngineSelect.test.tsx",
     "src/components/ModelInput.test.tsx",
+    "src/components/ModelInput.tsx",
     "src/components/ModelSelect.test.tsx",
     "src/components/StatusBar.test.tsx",
     "src/connection.test.ts",
     "src/connection.ts",
-    "src/types.test.ts"
+    "src/types.test.ts",
+    "src/types.ts"
   ],
   "sessions": [
     {
@@ -29,13 +35,20 @@
       "context": "/78/f7b1f0be0a/1/context.md",
       "content_hash": "/78/f7b1f0be0a/1/content_hash.txt",
       "prompt": "/78/f7b1f0be0a/1/prompt.txt"
+    },
+    {
+      "metadata": "/78/f7b1f0be0a/2/metadata.json",
+      "transcript": "/78/f7b1f0be0a/2/full.jsonl",
+      "context": "/78/f7b1f0be0a/2/context.md",
+      "content_hash": "/78/f7b1f0be0a/2/content_hash.txt",
+      "prompt": "/78/f7b1f0be0a/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 3255,
-    "cache_creation_tokens": 599933,
-    "cache_read_tokens": 26073405,
-    "output_tokens": 130566,
-    "api_call_count": 263
+    "input_tokens": 3500,
+    "cache_creation_tokens": 691483,
+    "cache_read_tokens": 35136178,
+    "output_tokens": 163024,
+    "api_call_count": 334
   }
 }
