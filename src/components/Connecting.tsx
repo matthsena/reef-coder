@@ -22,7 +22,7 @@ export function Connecting({ engine, statusMessages }: ConnectingProps) {
         </Text>
       </Box>
       {statusMessages.map((msg, i) => (
-        <Text key={i} dimColor>
+        <Text key={`${i}:${msg}`} dimColor>
           {'  '}{msg}
         </Text>
       ))}
