@@ -1,11 +1,16 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Box, Static, useApp } from 'ink';
 import type * as acp from '@agentclientprotocol/sdk';
 import type { SessionStore } from '../store.ts';
+import type { ChatMessage } from '../types.ts';
 import { useSessionStore } from '../hooks/useSessionStore.ts';
 import { MessageBubble } from './MessageBubble.tsx';
 import { StatusBar } from './StatusBar.tsx';
 import { PromptInput } from './PromptInput.tsx';
+
+type StaticItem =
+  | { type: 'header'; engine: string; model: string; sessionId: string }
+  | { type: 'message'; msg: ChatMessage; index: number };
 
 interface ChatProps {
   engine: string;
@@ -51,19 +56,35 @@ export function Chat({
     [connection, sessionId, store, addUserMessage, onExit, exit],
   );
 
+  const staticItems: StaticItem[] = useMemo(
+    () => [
+      { type: 'header' as const, engine, model, sessionId },
+      ...messages.map((msg, index) => ({ type: 'message' as const, msg, index })),
+    ],
+    [engine, model, sessionId, messages],
+  );
+
   return (
     <Box flexDirection="column">
-      <Static items={messages}>
-        {(msg, i) => (
-          <Box key={`${msg.timestamp}-${msg.role}-${i}`} flexDirection="column">
-            <MessageBubble message={msg} />
-          </Box>
-        )}
+      <Static items={staticItems}>
+        {(item) => {
+          if (item.type === 'header') {
+            return (
+              <Box key="header">
+                <StatusBar engine={item.engine} model={item.model} sessionId={item.sessionId} />
+              </Box>
+            );
+          }
+          return (
+            <Box key={`${item.msg.timestamp}-${item.msg.role}-${item.index}`} flexDirection="column">
+              <MessageBubble message={item.msg} />
+            </Box>
+          );
+        }}
       </Static>
 
       {currentMessage ? <MessageBubble message={currentMessage} /> : null}
 
-      <StatusBar engine={engine} model={model} sessionId={sessionId} />
       <PromptInput disabled={streaming} onSubmit={handleSubmit} />
     </Box>
   );
