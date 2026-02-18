@@ -1,9 +1,12 @@
-export type Screen = 'engine-select' | 'connecting' | 'model-select' | 'chat';
+export type Screen = 'engine-select' | 'connecting' | 'model-select' | 'model-input' | 'chat';
 
 export interface EngineConfig {
   executable: string;
   args: string[];
   model: string;
+  /** CLI flag for model selection (e.g. '-m'). When set, the model is passed
+   *  as a spawn arg instead of via the ACP session/set_model method. */
+  modelFlag?: string;
 }
 
 export const ENGINE_LABELS: Record<string, string> = {
@@ -33,27 +36,28 @@ export const ENGINES: Record<string, EngineConfig> = {
   codex: {
     executable: 'codex-acp',
     args: [],
-    model: 'gpt-5.2-codex',
+    model: 'gpt-5.3-codex',
   },
   copilot: {
     executable: 'copilot',
     args: ['--acp'],
-    model: 'gpt-5-mini',
+    model: 'claude-sonnet-4.5',
   },
   gemini: {
     executable: 'gemini',
     args: ['--experimental-acp'],
-    model: 'gemini-3-flash',
+    model: 'gemini-2.5-flash',
+    modelFlag: '-m',
   },
   opencode: {
     executable: 'opencode',
     args: ['acp'],
-    model: 'GLM-4.7',
+    model: 'opencode/big-pickle',
   },
   'qwen-code': {
     executable: 'qwen',
     args: ['--acp'],
-    model: 'corder-model',
+    model: 'coder-model(qwen-oauth)',
   },
 };
 

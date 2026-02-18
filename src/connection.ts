@@ -25,10 +25,14 @@ export async function createConnection(
   spawnArgs: string[],
   workdir: string,
   store: SessionStore,
+  modelFlag?: { flag: string; value: string },
 ) {
+  const allArgs = modelFlag
+    ? [...spawnArgs, modelFlag.flag, modelFlag.value]
+    : spawnArgs;
   store.emit('connection-status', `Spawning ${executable}...`);
 
-  const agentProcess = spawn(executable, spawnArgs, {
+  const agentProcess = spawn(executable, allArgs, {
     stdio: ['pipe', 'pipe', 'inherit'],
   });
 
