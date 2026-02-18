@@ -36,45 +36,66 @@ export class AgentClient implements acp.Client {
 
   async sessionUpdate(params: acp.SessionNotification): Promise<void> {
     const update = params.update;
+    if (!update) return;
 
-    switch (update.sessionUpdate) {
-      case 'agent_message_chunk':
-        this.store.emit(
-          'agent-message-chunk',
-          update.content.type === 'text'
-            ? update.content.text
-            : `[${update.content.type}]`,
-        );
-        break;
-
-      case 'agent_thought_chunk':
-        if (update.content.type === 'text') {
-          this.store.emit('agent-thought-chunk', update.content.text);
+    try {
+      switch (update.sessionUpdate) {
+        case 'agent_message_chunk': {
+          const content = (update as any).content;
+          if (content?.type === 'text') {
+            this.store.emit('agent-message-chunk', content.text);
+          } else if (content) {
+            this.store.emit('agent-message-chunk', `[${content.type}]`);
+          }
+          break;
         }
-        break;
 
-      case 'tool_call':
-        this.store.emit('tool-call', {
-          id: update.toolCallId,
-          title: update.title,
-          status: update.status ?? 'started',
-        });
-        break;
+        case 'agent_thought_chunk': {
+          const content = (update as any).content;
+          if (content?.type === 'text') {
+            this.store.emit('agent-thought-chunk', content.text);
+          }
+          break;
+        }
 
-      case 'tool_call_update':
-        this.store.emit(
-          'tool-call-update',
-          update.toolCallId,
-          update.status ?? 'unknown',
-        );
-        break;
+        case 'tool_call':
+          this.store.emit('tool-call', {
+            id: (update as any).toolCallId,
+            title: (update as any).title ?? 'tool call',
+            status: (update as any).status ?? 'started',
+          });
+          break;
 
-      case 'plan':
-        this.store.emit(
-          'plan',
-          update.entries.map((e) => ({ status: e.status, content: e.content })),
-        );
-        break;
+        case 'tool_call_update':
+          this.store.emit(
+            'tool-call-update',
+            (update as any).toolCallId,
+            (update as any).status ?? 'unknown',
+          );
+          break;
+
+        case 'plan':
+          this.store.emit(
+            'plan',
+            ((update as any).entries ?? []).map((e: any) => ({
+              status: e.status,
+              content: e.content,
+            })),
+          );
+          break;
+
+        default:
+          this.store.emit(
+            'connection-status',
+            `[debug] unhandled sessionUpdate: ${(update as any).sessionUpdate}`,
+          );
+          break;
+      }
+    } catch (err) {
+      this.store.emit(
+        'agent-message-chunk',
+        `\n[sessionUpdate error: ${err instanceof Error ? err.message : String(err)}]\n`,
+      );
     }
   }
 

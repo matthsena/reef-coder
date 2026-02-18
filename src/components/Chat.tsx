@@ -52,7 +52,16 @@ export function Chat({
           prompt: await buildPromptBlocks(text, workdir),
         });
         store.emit('turn-end', result.stopReason);
-      } catch {
+      } catch (err) {
+        let msg: string;
+        if (err instanceof Error) {
+          msg = err.message;
+        } else if (typeof err === 'object' && err !== null) {
+          msg = JSON.stringify(err);
+        } else {
+          msg = String(err);
+        }
+        store.emit('agent-message-chunk', `\n[error: ${msg}]\n`);
         store.emit('turn-end', 'error');
       }
     },
