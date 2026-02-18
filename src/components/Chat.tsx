@@ -13,7 +13,7 @@ interface ChatProps {
   sessionId: string;
   connection: acp.ClientSideConnection;
   store: SessionStore;
-  onExit: () => void;
+  onExit: () => void | Promise<void>;
 }
 
 export function Chat({
@@ -31,7 +31,7 @@ export function Chat({
   const handleSubmit = useCallback(
     async (text: string) => {
       if (text === 'exit' || text === 'quit') {
-        onExit();
+        await onExit();
         exit();
         return;
       }
