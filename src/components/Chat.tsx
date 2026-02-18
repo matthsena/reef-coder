@@ -4,6 +4,7 @@ import type * as acp from '@agentclientprotocol/sdk';
 import type { SessionStore } from '../store.ts';
 import type { ChatMessage } from '../types.ts';
 import { useSessionStore } from '../hooks/useSessionStore.ts';
+import { buildPromptBlocks } from '../image-utils.ts';
 import { MessageBubble } from './MessageBubble.tsx';
 import { StatusBar } from './StatusBar.tsx';
 import { PromptInput } from './PromptInput.tsx';
@@ -18,6 +19,7 @@ interface ChatProps {
   sessionId: string;
   connection: acp.ClientSideConnection;
   store: SessionStore;
+  workdir: string;
   onExit: () => void | Promise<void>;
 }
 
@@ -27,6 +29,7 @@ export function Chat({
   sessionId,
   connection,
   store,
+  workdir,
   onExit,
 }: ChatProps) {
   const { messages, currentMessage, streaming, addUserMessage } =
@@ -46,14 +49,14 @@ export function Chat({
       try {
         const result = await connection.prompt({
           sessionId,
-          prompt: [{ type: 'text', text }],
+          prompt: await buildPromptBlocks(text, workdir),
         });
         store.emit('turn-end', result.stopReason);
       } catch {
         store.emit('turn-end', 'error');
       }
     },
-    [connection, sessionId, store, addUserMessage, onExit, exit],
+    [connection, sessionId, store, workdir, addUserMessage, onExit, exit],
   );
 
   const staticItems: StaticItem[] = useMemo(

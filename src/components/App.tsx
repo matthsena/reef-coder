@@ -218,6 +218,7 @@ export function App({ workdir }: AppProps) {
           sessionId={conn.sessionId}
           connection={conn.connection}
           store={store}
+          workdir={workdir}
           onExit={handleExit}
         />
       )}
