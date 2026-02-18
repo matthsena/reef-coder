@@ -38,12 +38,15 @@ export function Chat({
 
       addUserMessage(text);
 
-      const result = await connection.prompt({
-        sessionId,
-        prompt: [{ type: 'text', text }],
-      });
-
-      store.emit('turn-end', result.stopReason);
+      try {
+        const result = await connection.prompt({
+          sessionId,
+          prompt: [{ type: 'text', text }],
+        });
+        store.emit('turn-end', result.stopReason);
+      } catch {
+        store.emit('turn-end', 'error');
+      }
     },
     [connection, sessionId, store, addUserMessage, onExit, exit],
   );
