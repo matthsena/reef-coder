@@ -1,4 +1,9 @@
-export type Screen = 'engine-select' | 'connecting' | 'model-select' | 'model-input' | 'chat';
+export type Screen =
+  | 'engine-select'
+  | 'connecting'
+  | 'model-select'
+  | 'model-input'
+  | 'chat';
 
 export interface EngineConfig {
   executable: string;
@@ -44,20 +49,14 @@ export const ENGINES: Record<string, EngineConfig> = {
   copilot: {
     executable: 'copilot',
     args: ['--acp'],
-    model: 'claude-sonnet-4.5',
+    model: 'claude-sonnet-4.6',
   },
   gemini: {
     executable: 'gemini',
     args: ['--experimental-acp'],
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash',
     modelFlag: '-m',
-    predefinedModels: [
-      'gemini-2.5-flash',
-      'gemini-2.5-pro',
-      'gemini-2.5-flash-lite',
-      'gemini-3-flash-preview',
-      'gemini-3-pro-preview',
-    ],
+    predefinedModels: ['gemini-3-flash', 'gemini-3-pro'],
   },
   opencode: {
     executable: 'opencode',
