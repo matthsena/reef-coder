@@ -38,6 +38,9 @@ export function App({ workdir }: AppProps) {
   // Track whether we've already initiated a connection attempt for the
   // current engine so the effect doesn't fire twice in React strict-mode.
   const connectingRef = useRef(false);
+  // Track whether the component is still mounted to avoid stale state updates.
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   const handleEngineSelect = useCallback((selected: string) => {
     setEngine(selected);
@@ -99,10 +102,11 @@ export function App({ workdir }: AppProps) {
       setSessionModel(conn.connection, conn.sessionId, selectedModel, store)
         .then(() => {
           store.off('connection-status', onStatus);
-          setScreen('chat');
+          if (mountedRef.current) setScreen('chat');
         })
         .catch((err: unknown) => {
           store.off('connection-status', onStatus);
+          if (!mountedRef.current) return;
           setStatusMessages((prev) => [
             ...prev,
             `Error setting model: ${formatError(err)}`,
@@ -146,6 +150,7 @@ export function App({ workdir }: AppProps) {
           { flag: engineCfg.modelFlag, value: selectedModel },
         );
         setConn(result);
+        connectingRef.current = false;
         setScreen('chat');
       } catch (err: unknown) {
         connectingRef.current = false;
