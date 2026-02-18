@@ -153,7 +153,7 @@ describe('App E2E', () => {
     expect(frame).toContain('>');
   });
 
-  test('engine-select → connecting → model-input (engine with modelFlag)', async () => {
+  test('engine-select → connecting → model-select (engine with predefinedModels)', async () => {
     const { stdin, lastFrame } = render(<App workdir="/tmp" />);
     await Bun.sleep(W);
 
@@ -172,11 +172,13 @@ describe('App E2E', () => {
     await Bun.sleep(W);
 
     const frame = lastFrame()!;
-    expect(frame).toContain('Enter model name:');
+    expect(frame).toContain('Select model:');
+    expect(frame).toContain('gemini-2.5-flash');
+    expect(frame).toContain('gemini-2.5-pro');
     expect(frame).toContain('Gemini CLI');
   });
 
-  test('model-input submits and reconnects with modelFlag', async () => {
+  test('predefinedModels: pick model → reconnect → chat', async () => {
     const { stdin, lastFrame } = render(<App workdir="/tmp" />);
     await Bun.sleep(W);
 
@@ -188,18 +190,20 @@ describe('App E2E', () => {
     stdin.write(ENTER);
     await Bun.sleep(W);
 
-    // First connection resolves
+    // First connection resolves — shows model-select with predefined models
     resolveConnection(makeConnectionResult());
     await Bun.sleep(W);
 
-    // On model-input screen, the default model is pre-filled
+    expect(lastFrame()!).toContain('Select model:');
     expect(lastFrame()!).toContain('gemini-2.5-flash');
 
-    // Submit default model
+    // Pick the second model (gemini-2.5-pro)
+    stdin.write(ARROW_DOWN);
+    await Bun.sleep(W);
     stdin.write(ENTER);
     await Bun.sleep(W);
 
-    // Should show connecting again (reconnecting)
+    // Should show connecting again (reconnecting with modelFlag)
     expect(lastFrame()!).toContain('Reconnecting');
 
     // Resolve the second connection
@@ -311,7 +315,7 @@ describe('App E2E', () => {
     expect(lastFrame()!).toContain('OpenCode');
   });
 
-  test('model-input reconnect error recovers to model-input screen', async () => {
+  test('predefinedModels reconnect error recovers to model-select screen', async () => {
     // First call succeeds (initial connect), second call rejects (reconnect)
     let callCount = 0;
     mockCreateConnection.mockImplementation(
@@ -331,7 +335,7 @@ describe('App E2E', () => {
     const { stdin, lastFrame } = render(<App workdir="/tmp" />);
     await Bun.sleep(W);
 
-    // Navigate to Gemini CLI (has modelFlag)
+    // Navigate to Gemini CLI (has predefinedModels + modelFlag)
     stdin.write(ARROW_DOWN);
     await Bun.sleep(W);
     stdin.write(ARROW_DOWN);
@@ -339,19 +343,19 @@ describe('App E2E', () => {
     stdin.write(ENTER);
     await Bun.sleep(W);
 
-    // First connection succeeds
+    // First connection succeeds — model-select with predefined models
     resolveConnection(makeConnectionResult());
     await Bun.sleep(W);
 
-    // On model-input, submit
+    // On model-select, pick a model
     stdin.write(ENTER);
     await Bun.sleep(W);
 
-    // The reconnect rejects immediately — app recovers to model-input
+    // The reconnect rejects immediately — app recovers to model-select
     await Bun.sleep(W);
 
     const frame = lastFrame()!;
-    expect(frame).toContain('Enter model name:');
+    expect(frame).toContain('Select model:');
     expect(frame).toContain('Gemini CLI');
   });
 

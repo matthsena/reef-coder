@@ -65,11 +65,15 @@ export function App({ workdir }: AppProps) {
         setAvailableModels(result.availableModels);
         setCurrentModelId(result.currentModelId);
         if (result.availableModels.length > 0) {
-          // Engine provides model list — let the user pick
+          // Engine provides model list via ACP
+          setScreen('model-select');
+        } else if (engineCfg.predefinedModels && engineCfg.predefinedModels.length > 0) {
+          // Engine has predefined models — show picker, use modelFlag for spawning
+          setAvailableModels(engineCfg.predefinedModels.map(id => ({ modelId: id })));
+          setCurrentModelId(result.currentModelId ?? engineCfg.model);
           setScreen('model-select');
         } else if (engineCfg.modelFlag) {
-          // Engine doesn't list models but accepts a CLI model flag —
-          // show a text input so the user can type a model name.
+          // Engine accepts CLI model flag but no predefined list — free text input
           setScreen('model-input');
         } else {
           // No model selection available — proceed with engine default
@@ -87,37 +91,6 @@ export function App({ workdir }: AppProps) {
       store.off('connection-status', onStatus);
     };
   }, [screen, engine, conn, workdir, store]);
-
-  // Handle ACP-based model selection (engines that return availableModels)
-  const handleModelSelect = useCallback(
-    (selectedModel: string) => {
-      if (!conn) return;
-      setModel(selectedModel);
-      setScreen('connecting');
-      setStatusMessages((prev) => [...prev, `Setting model to ${selectedModel}...`]);
-
-      const onStatus = (msg: string) => {
-        setStatusMessages((prev) => [...prev, msg]);
-      };
-      store.on('connection-status', onStatus);
-
-      setSessionModel(conn.connection, conn.sessionId, selectedModel, store)
-        .then(() => {
-          store.off('connection-status', onStatus);
-          if (mountedRef.current) setScreen('chat');
-        })
-        .catch((err: unknown) => {
-          store.off('connection-status', onStatus);
-          if (!mountedRef.current) return;
-          setStatusMessages((prev) => [
-            ...prev,
-            `Error setting model: ${formatError(err)}`,
-          ]);
-          setScreen('model-select');
-        });
-    },
-    [conn, store],
-  );
 
   // Handle CLI-flag-based model selection (e.g. Gemini -m).
   // Tears down the existing connection and re-spawns with the model flag.
@@ -160,12 +133,51 @@ export function App({ workdir }: AppProps) {
           ...prev,
           `Error: ${formatError(err)}`,
         ]);
-        setScreen('model-input');
+        setScreen(engineCfg.predefinedModels?.length ? 'model-select' : 'model-input');
       } finally {
         store.off('connection-status', onStatus);
       }
     },
     [engine, conn, workdir, store],
+  );
+
+  // Handle ACP-based model selection (engines that return availableModels)
+  const handleModelSelect = useCallback(
+    (selectedModel: string) => {
+      if (!conn) return;
+      const engineCfg = ENGINES[engine]!;
+
+      // If engine uses modelFlag, reconnect with the flag instead of ACP set_model
+      if (engineCfg.modelFlag) {
+        handleModelInput(selectedModel);
+        return;
+      }
+
+      setModel(selectedModel);
+      setScreen('connecting');
+      setStatusMessages((prev) => [...prev, `Setting model to ${selectedModel}...`]);
+
+      const onStatus = (msg: string) => {
+        setStatusMessages((prev) => [...prev, msg]);
+      };
+      store.on('connection-status', onStatus);
+
+      setSessionModel(conn.connection, conn.sessionId, selectedModel, store)
+        .then(() => {
+          store.off('connection-status', onStatus);
+          if (mountedRef.current) setScreen('chat');
+        })
+        .catch((err: unknown) => {
+          store.off('connection-status', onStatus);
+          if (!mountedRef.current) return;
+          setStatusMessages((prev) => [
+            ...prev,
+            `Error setting model: ${formatError(err)}`,
+          ]);
+          setScreen('model-select');
+        });
+    },
+    [conn, store, engine, handleModelInput],
   );
 
   const handleExit = useCallback(async () => {

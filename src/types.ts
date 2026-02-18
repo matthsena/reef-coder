@@ -7,6 +7,9 @@ export interface EngineConfig {
   /** CLI flag for model selection (e.g. '-m'). When set, the model is passed
    *  as a spawn arg instead of via the ACP session/set_model method. */
   modelFlag?: string;
+  /** Predefined model list for the selection screen when the engine
+   *  doesn't provide models via ACP but supports a model CLI flag. */
+  predefinedModels?: string[];
 }
 
 export const ENGINE_LABELS: Record<string, string> = {
@@ -48,6 +51,13 @@ export const ENGINES: Record<string, EngineConfig> = {
     args: ['--experimental-acp'],
     model: 'gemini-2.5-flash',
     modelFlag: '-m',
+    predefinedModels: [
+      'gemini-2.5-flash',
+      'gemini-2.5-pro',
+      'gemini-2.5-flash-lite',
+      'gemini-3-flash-preview',
+      'gemini-3-pro-preview',
+    ],
   },
   opencode: {
     executable: 'opencode',

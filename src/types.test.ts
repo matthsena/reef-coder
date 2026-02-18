@@ -41,6 +41,22 @@ describe('ENGINES config', () => {
     expect(withModelFlag[0]![1].modelFlag).toBe('-m');
   });
 
+  test('gemini has predefinedModels', () => {
+    const gemini = ENGINES['gemini']!;
+    expect(gemini.predefinedModels).toBeArray();
+    expect(gemini.predefinedModels!.length).toBeGreaterThan(0);
+    expect(gemini.predefinedModels).toContain('gemini-2.5-flash');
+    expect(gemini.predefinedModels).toContain('gemini-2.5-pro');
+  });
+
+  test('only gemini has predefinedModels', () => {
+    const withPredefined = Object.entries(ENGINES).filter(
+      ([, cfg]) => cfg.predefinedModels !== undefined,
+    );
+    expect(withPredefined).toHaveLength(1);
+    expect(withPredefined[0]![0]).toBe('gemini');
+  });
+
   test('args are arrays of strings', () => {
     for (const cfg of Object.values(ENGINES)) {
       for (const arg of cfg.args) {
