@@ -134,6 +134,59 @@ describe('Chat', () => {
     expect(frame).toContain('waiting for agent...');
   });
 
+  test('typing "exit" calls onExit', async () => {
+    const store = new SessionStore();
+    const onExit = mock();
+    const conn = makeMockConnection();
+
+    const { stdin } = render(
+      <Chat
+        engine="claude-code"
+        model="opus"
+        sessionId="session-1"
+        connection={conn as any}
+        store={store}
+        onExit={onExit}
+      />,
+    );
+    await Bun.sleep(RENDER_WAIT);
+
+    stdin.write('exit');
+    await Bun.sleep(RENDER_WAIT);
+    stdin.write('\r');
+    await Bun.sleep(RENDER_WAIT);
+
+    expect(onExit).toHaveBeenCalled();
+    // prompt should NOT be called for exit
+    expect(conn.prompt).not.toHaveBeenCalled();
+  });
+
+  test('typing "quit" calls onExit', async () => {
+    const store = new SessionStore();
+    const onExit = mock();
+    const conn = makeMockConnection();
+
+    const { stdin } = render(
+      <Chat
+        engine="claude-code"
+        model="opus"
+        sessionId="session-1"
+        connection={conn as any}
+        store={store}
+        onExit={onExit}
+      />,
+    );
+    await Bun.sleep(RENDER_WAIT);
+
+    stdin.write('quit');
+    await Bun.sleep(RENDER_WAIT);
+    stdin.write('\r');
+    await Bun.sleep(RENDER_WAIT);
+
+    expect(onExit).toHaveBeenCalled();
+    expect(conn.prompt).not.toHaveBeenCalled();
+  });
+
   test('renders multiple messages from history', async () => {
     const store = new SessionStore();
     const conn = makeMockConnection();
