@@ -47,6 +47,12 @@ export class TerminalManager {
         }
       });
     }
+    proc.on('error', (err) => {
+      terminal.output += `\n[spawn error: ${err.message}]`;
+      terminal.exitCode = -1;
+      terminal.exited = true;
+      resolve();
+    });
     proc.on('exit', (code, signal) => {
       terminal.exitCode = code;
       terminal.signal = signal;
