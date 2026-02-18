@@ -1,5 +1,8 @@
 import { describe, expect, test, mock } from 'bun:test';
 import { render } from 'ink-testing-library';
+import { writeFile, mkdtemp, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { Chat } from './Chat.tsx';
 import { SessionStore } from '../store.ts';
 
@@ -23,6 +26,7 @@ describe('Chat', () => {
         sessionId="abcdef1234567890"
         connection={conn as any}
         store={store}
+        workdir="/tmp"
         onExit={() => {}}
       />,
     );
@@ -44,6 +48,7 @@ describe('Chat', () => {
         sessionId="session123"
         connection={conn as any}
         store={store}
+        workdir="/tmp"
         onExit={() => {}}
       />,
     );
@@ -64,6 +69,7 @@ describe('Chat', () => {
         sessionId="session-1"
         connection={conn as any}
         store={store}
+        workdir="/tmp"
         onExit={() => {}}
       />,
     );
@@ -89,6 +95,7 @@ describe('Chat', () => {
         sessionId="session-1"
         connection={conn as any}
         store={store}
+        workdir="/tmp"
         onExit={() => {}}
       />,
     );
@@ -118,6 +125,7 @@ describe('Chat', () => {
         sessionId="session-1"
         connection={conn as any}
         store={store}
+        workdir="/tmp"
         onExit={() => {}}
       />,
     );
@@ -146,6 +154,7 @@ describe('Chat', () => {
         sessionId="session-1"
         connection={conn as any}
         store={store}
+        workdir="/tmp"
         onExit={onExit}
       />,
     );
@@ -173,6 +182,7 @@ describe('Chat', () => {
         sessionId="session-1"
         connection={conn as any}
         store={store}
+        workdir="/tmp"
         onExit={onExit}
       />,
     );
@@ -198,6 +208,7 @@ describe('Chat', () => {
         sessionId="session-1"
         connection={conn as any}
         store={store}
+        workdir="/tmp"
         onExit={() => {}}
       />,
     );
@@ -215,5 +226,43 @@ describe('Chat', () => {
     const frame = lastFrame()!;
     expect(frame).toContain('You');
     expect(frame).toContain('Agent');
+  });
+
+  test('sends image content blocks for @image: references', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'chat-img-test-'));
+    const imgPath = join(dir, 'test.png');
+    await writeFile(imgPath, Buffer.from('fake-png'));
+
+    const store = new SessionStore();
+    const conn = makeMockConnection();
+
+    const { stdin } = render(
+      <Chat
+        engine="claude-code"
+        model="opus"
+        sessionId="session-1"
+        connection={conn as any}
+        store={store}
+        workdir={dir}
+        onExit={() => {}}
+      />,
+    );
+    await Bun.sleep(RENDER_WAIT);
+
+    stdin.write(`describe @image:${imgPath}`);
+    await Bun.sleep(RENDER_WAIT);
+    stdin.write('\r');
+    await Bun.sleep(RENDER_WAIT);
+
+    try {
+      expect(conn.prompt).toHaveBeenCalled();
+      const call = (conn.prompt as any).mock.calls[0];
+      const prompt = call[0].prompt;
+      expect(prompt.length).toBe(2);
+      expect(prompt[0]).toMatchObject({ type: 'text' });
+      expect(prompt[1]).toMatchObject({ type: 'image', mimeType: 'image/png' });
+    } finally {
+      await rm(dir, { recursive: true });
+    }
   });
 });
