@@ -11,7 +11,7 @@ export class AgentClient implements acp.Client {
     private store: SessionStore,
   ) {}
 
-  private async assertWithinWorkdir(targetPath: string): Promise<void> {
+  private async resolveWithinWorkdir(targetPath: string): Promise<string> {
     const resolved = resolve(this.workdir, targetPath);
     if (resolved !== this.workdir && !resolved.startsWith(this.workdir + '/')) {
       throw new Error(
@@ -26,9 +26,10 @@ export class AgentClient implements acp.Client {
           `Access denied: ${real} resolves outside workdir ${this.workdir}`,
         );
       }
+      return real;
     } catch (err: unknown) {
       // Path component doesn't exist yet (e.g. new files or parent dirs) — resolve check is sufficient
-      if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'ENOENT') return;
+      if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'ENOENT') return resolved;
       throw err;
     }
   }
@@ -96,28 +97,27 @@ export class AgentClient implements acp.Client {
   async readTextFile(
     params: acp.ReadTextFileRequest,
   ): Promise<acp.ReadTextFileResponse> {
-    await this.assertWithinWorkdir(params.path);
-    const content = await readFile(params.path, 'utf-8');
+    const safePath = await this.resolveWithinWorkdir(params.path);
+    const content = await readFile(safePath, 'utf-8');
     return { content };
   }
 
   async writeTextFile(
     params: acp.WriteTextFileRequest,
   ): Promise<acp.WriteTextFileResponse> {
-    await this.assertWithinWorkdir(params.path);
-    await writeFile(params.path, params.content, 'utf-8');
+    const safePath = await this.resolveWithinWorkdir(params.path);
+    await writeFile(safePath, params.content, 'utf-8');
     return {};
   }
 
   async createTerminal(
     params: acp.CreateTerminalRequest,
   ): Promise<acp.CreateTerminalResponse> {
-    const cwd = params.cwd ?? this.workdir;
-    await this.assertWithinWorkdir(cwd);
+    const safeCwd = await this.resolveWithinWorkdir(params.cwd ?? this.workdir);
     const terminalId = this.terminals.create(
       params.command,
       params.args ?? [],
-      cwd,
+      safeCwd,
     );
     return { terminalId };
   }
