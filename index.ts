@@ -1,15 +1,22 @@
 import { resolve } from 'node:path';
-import { stat } from 'node:fs/promises';
+import { stat, realpath } from 'node:fs/promises';
 import { render } from 'ink';
 import React from 'react';
 import { App } from './src/components/App.tsx';
 
 async function main() {
   const workdirIndex = process.argv.indexOf('--workdir');
-  const workdir =
-    workdirIndex !== -1
-      ? resolve(process.argv[workdirIndex + 1]!)
-      : process.cwd();
+  let workdir: string;
+  if (workdirIndex !== -1) {
+    const workdirArg = process.argv[workdirIndex + 1];
+    if (!workdirArg) {
+      console.error('Error: --workdir requires a path argument');
+      process.exit(1);
+    }
+    workdir = resolve(workdirArg);
+  } else {
+    workdir = process.cwd();
+  }
 
   const workdirStat = await stat(workdir).catch(() => null);
   if (!workdirStat || !workdirStat.isDirectory()) {
@@ -19,7 +26,8 @@ async function main() {
     process.exit(1);
   }
 
-  render(React.createElement(App, { workdir }));
+  const realWorkdir = await realpath(workdir);
+  render(React.createElement(App, { workdir: realWorkdir }));
 }
 
 main().catch(console.error);
