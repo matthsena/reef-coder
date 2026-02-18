@@ -42,6 +42,7 @@ mock.module('node:child_process', () => ({
       stderr: null,
       pid: 12345,
       kill: mockKill,
+      on: mock(() => {}),
       once: mock((_event: string, cb: () => void) => {
         cb();
       }),

@@ -44,9 +44,17 @@ export async function createConnection(
     stdio: ['pipe', 'pipe', 'ignore'],
   });
 
-  const input = Writable.toWeb(agentProcess.stdin!);
+  agentProcess.on('error', (err) => {
+    store.emit('connection-status', `Spawn error: ${err.message}`);
+  });
+
+  if (!agentProcess.stdin || !agentProcess.stdout) {
+    throw new Error(`Failed to open stdio pipes for ${executable}`);
+  }
+
+  const input = Writable.toWeb(agentProcess.stdin);
   const output = Readable.toWeb(
-    agentProcess.stdout!,
+    agentProcess.stdout,
   ) as ReadableStream<Uint8Array>;
 
   const terminals = new TerminalManager();
