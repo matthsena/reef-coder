@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "6b65441265ee",
+  "session_id": "9e65099a-7933-4509-804d-9cd97b346752",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-18T14:40:04.564807222Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/App.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "88f395bd9ce0",
+  "token_usage": {
+    "input_tokens": 2999,
+    "cache_creation_tokens": 59946,
+    "cache_read_tokens": 1978608,
+    "output_tokens": 14087,
+    "api_call_count": 40
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-18T14:40:03.944811528Z",
+    "agent_lines": 1,
+    "human_added": 70,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 71,
+    "agent_percentage": 1.4084507042253522
+  },
+  "transcript_path": ".claude/projects/-home-matheus-Desktop-agent-swarm/9e65099a-7933-4509-804d-9cd97b346752.jsonl"
+}
