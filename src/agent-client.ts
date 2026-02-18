@@ -12,7 +12,7 @@ export class AgentClient implements acp.Client {
   ) {}
 
   private async assertWithinWorkdir(targetPath: string): Promise<void> {
-    const resolved = resolve(targetPath);
+    const resolved = resolve(this.workdir, targetPath);
     if (resolved !== this.workdir && !resolved.startsWith(this.workdir + '/')) {
       throw new Error(
         `Access denied: ${resolved} is outside workdir ${this.workdir}`,
