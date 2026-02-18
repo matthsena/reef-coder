@@ -8,7 +8,6 @@ import { createConnection, setSessionModel } from '../connection.ts';
 import type { AvailableModel } from '../connection.ts';
 import { EngineSelect } from './EngineSelect.tsx';
 import { ModelSelect } from './ModelSelect.tsx';
-import { ModelInput } from './ModelInput.tsx';
 import { Connecting } from './Connecting.tsx';
 import { Chat } from './Chat.tsx';
 
@@ -67,14 +66,6 @@ export function App({ workdir }: AppProps) {
         if (result.availableModels.length > 0) {
           // Engine provides model list via ACP
           setScreen('model-select');
-        } else if (engineCfg.predefinedModels && engineCfg.predefinedModels.length > 0) {
-          // Engine has predefined models — show picker, use modelFlag for spawning
-          setAvailableModels(engineCfg.predefinedModels.map(id => ({ modelId: id })));
-          setCurrentModelId(result.currentModelId ?? engineCfg.model);
-          setScreen('model-select');
-        } else if (engineCfg.modelFlag) {
-          // Engine accepts CLI model flag but no predefined list — free text input
-          setScreen('model-input');
         } else {
           // No model selection available — proceed with engine default
           setModel(result.currentModelId ?? engineCfg.model);
@@ -92,66 +83,10 @@ export function App({ workdir }: AppProps) {
     };
   }, [screen, engine, conn, workdir, store]);
 
-  // Handle CLI-flag-based model selection (e.g. Gemini -m).
-  // Tears down the existing connection and re-spawns with the model flag.
-  const handleModelInput = useCallback(
-    async (selectedModel: string) => {
-      const engineCfg = ENGINES[engine]!;
-      if (!engineCfg.modelFlag) return;
-
-      // Shut down existing connection
-      if (conn) {
-        await conn.shutdown();
-        setConn(null);
-      }
-
-      setModel(selectedModel);
-      setScreen('connecting');
-      // connectingRef stays true so the effect does not double-connect;
-      // we handle the reconnection directly below.
-      setStatusMessages([`Reconnecting with model ${selectedModel}...`]);
-
-      const onStatus = (msg: string) => {
-        setStatusMessages((prev) => [...prev, msg]);
-      };
-      store.on('connection-status', onStatus);
-
-      try {
-        const result = await createConnection(
-          engineCfg.executable,
-          engineCfg.args,
-          workdir,
-          store,
-          { flag: engineCfg.modelFlag, value: selectedModel },
-        );
-        setConn(result);
-        connectingRef.current = false;
-        setScreen('chat');
-      } catch (err: unknown) {
-        connectingRef.current = false;
-        setStatusMessages((prev) => [
-          ...prev,
-          `Error: ${formatError(err)}`,
-        ]);
-        setScreen(engineCfg.predefinedModels?.length ? 'model-select' : 'model-input');
-      } finally {
-        store.off('connection-status', onStatus);
-      }
-    },
-    [engine, conn, workdir, store],
-  );
-
   // Handle ACP-based model selection (engines that return availableModels)
   const handleModelSelect = useCallback(
     (selectedModel: string) => {
       if (!conn) return;
-      const engineCfg = ENGINES[engine]!;
-
-      // If engine uses modelFlag, reconnect with the flag instead of ACP set_model
-      if (engineCfg.modelFlag) {
-        handleModelInput(selectedModel);
-        return;
-      }
 
       setModel(selectedModel);
       setScreen('connecting');
@@ -177,7 +112,7 @@ export function App({ workdir }: AppProps) {
           setScreen('model-select');
         });
     },
-    [conn, store, engine, handleModelInput],
+    [conn, store],
   );
 
   const handleExit = useCallback(async () => {
@@ -200,14 +135,6 @@ export function App({ workdir }: AppProps) {
           availableModels={availableModels}
           currentModelId={currentModelId}
           onSelect={handleModelSelect}
-        />
-      )}
-
-      {screen === 'model-input' && (
-        <ModelInput
-          engine={engine}
-          defaultModel={ENGINES[engine]?.model ?? ''}
-          onSubmit={handleModelInput}
         />
       )}
 

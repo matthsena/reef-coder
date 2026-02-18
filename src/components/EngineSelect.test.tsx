@@ -11,7 +11,6 @@ const RENDER_WAIT = 100;
 const SORTED_ENGINES = [
   { label: 'Claude Code', key: 'claude-code' },
   { label: 'Codex', key: 'codex' },
-  { label: 'Gemini CLI', key: 'gemini' },
   { label: 'GitHub Copilot CLI', key: 'copilot' },
   { label: 'OpenCode', key: 'opencode' },
   { label: 'Qwen Code', key: 'qwen-code' },
@@ -76,7 +75,7 @@ describe('EngineSelect', () => {
     const { stdin, lastFrame } = render(<EngineSelect onSelect={() => {}} />);
     await Bun.sleep(RENDER_WAIT);
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       stdin.write(ARROW_DOWN);
       await Bun.sleep(RENDER_WAIT);
     }
@@ -106,7 +105,7 @@ describe('EngineSelect', () => {
     expect(onSelect).toHaveBeenCalledWith('claude-code');
   });
 
-  test('navigate down twice and select Gemini CLI', async () => {
+  test('navigate down twice and select GitHub Copilot CLI', async () => {
     const onSelect = mock();
     const { stdin } = render(<EngineSelect onSelect={onSelect} />);
     await Bun.sleep(RENDER_WAIT);
@@ -118,10 +117,10 @@ describe('EngineSelect', () => {
     stdin.write(ENTER);
     await Bun.sleep(RENDER_WAIT);
 
-    expect(onSelect).toHaveBeenCalledWith('gemini');
+    expect(onSelect).toHaveBeenCalledWith('copilot');
   });
 
-  test('navigate to GitHub Copilot CLI (4th item) and select', async () => {
+  test('navigate to OpenCode (4th item) and select', async () => {
     const onSelect = mock();
     const { stdin } = render(<EngineSelect onSelect={onSelect} />);
     await Bun.sleep(RENDER_WAIT);
@@ -133,7 +132,7 @@ describe('EngineSelect', () => {
     stdin.write(ENTER);
     await Bun.sleep(RENDER_WAIT);
 
-    expect(onSelect).toHaveBeenCalledWith('copilot');
+    expect(onSelect).toHaveBeenCalledWith('opencode');
   });
 
   test('wrap up from first and select last (Qwen Code)', async () => {
@@ -154,7 +153,7 @@ describe('EngineSelect', () => {
     const { stdin } = render(<EngineSelect onSelect={onSelect} />);
     await Bun.sleep(RENDER_WAIT);
 
-    // Down 3, up 1 = index 2 (Gemini CLI)
+    // Down 3, up 1 = index 2 (GitHub Copilot CLI)
     stdin.write(ARROW_DOWN);
     await Bun.sleep(RENDER_WAIT);
     stdin.write(ARROW_DOWN);
@@ -166,6 +165,6 @@ describe('EngineSelect', () => {
     stdin.write(ENTER);
     await Bun.sleep(RENDER_WAIT);
 
-    expect(onSelect).toHaveBeenCalledWith('gemini');
+    expect(onSelect).toHaveBeenCalledWith('copilot');
   });
 });

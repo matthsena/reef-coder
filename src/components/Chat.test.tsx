@@ -43,8 +43,8 @@ describe('Chat', () => {
 
     const { lastFrame } = render(
       <Chat
-        engine="gemini"
-        model="gemini-2.5-flash"
+        engine="copilot"
+        model="claude-sonnet-4.6"
         sessionId="session123"
         connection={conn as any}
         store={store}

@@ -31,17 +31,13 @@ export async function createConnection(
   spawnArgs: string[],
   workdir: string,
   store: SessionStore,
-  modelFlag?: { flag: string; value: string },
 ) {
   patchZodSchema();
 
-  const allArgs = modelFlag
-    ? [...spawnArgs, modelFlag.flag, modelFlag.value]
-    : spawnArgs;
   store.emit('connection-status', `Spawning ${executable}...`);
 
-  const agentProcess = spawn(executable, allArgs, {
-    stdio: ['pipe', 'pipe', 'ignore'],
+  const agentProcess = spawn(executable, spawnArgs, {
+    stdio: ['pipe', 'pipe', 'pipe'],
   });
 
   agentProcess.on('error', (err) => {
@@ -52,10 +48,59 @@ export async function createConnection(
     throw new Error(`Failed to open stdio pipes for ${executable}`);
   }
 
+  // Forward stderr so agent errors are visible
+  if (agentProcess.stderr) {
+    let stderrBuf = '';
+    agentProcess.stderr.on('data', (chunk: Buffer) => {
+      stderrBuf += chunk.toString();
+      const lines = stderrBuf.split('\n');
+      stderrBuf = lines.pop()!;
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed) store.emit('connection-status', `[stderr] ${trimmed}`);
+      }
+    });
+  }
+
   const input = Writable.toWeb(agentProcess.stdin);
-  const output = Readable.toWeb(
+  const rawOutput = Readable.toWeb(
     agentProcess.stdout,
   ) as ReadableStream<Uint8Array>;
+
+  // Filter non-JSON lines from agent stdout.  Some agents emit log messages
+  // on stdout which break the ndjson parser and cause console.error output
+  // that corrupts the Ink terminal display.
+  const textDecoder = new TextDecoder();
+  const textEncoder = new TextEncoder();
+  let stdoutBuf = '';
+  const output = rawOutput.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        stdoutBuf += textDecoder.decode(chunk, { stream: true });
+        const lines = stdoutBuf.split('\n');
+        stdoutBuf = lines.pop() ?? '';
+        const jsonLines: string[] = [];
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          if (trimmed.startsWith('{')) {
+            jsonLines.push(line);
+          } else {
+            store.emit('connection-status', `[agent stdout] ${trimmed}`);
+          }
+        }
+        if (jsonLines.length > 0) {
+          controller.enqueue(textEncoder.encode(jsonLines.join('\n') + '\n'));
+        }
+      },
+      flush(controller) {
+        const trimmed = stdoutBuf.trim();
+        if (trimmed && trimmed.startsWith('{')) {
+          controller.enqueue(textEncoder.encode(trimmed + '\n'));
+        }
+      },
+    }),
+  );
 
   const terminals = new TerminalManager();
   const client = new AgentClient(terminals, workdir, store);

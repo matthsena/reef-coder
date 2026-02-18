@@ -94,21 +94,6 @@ describe('createConnection', () => {
     expect(spawnCalls[0]!.args).toEqual(['--flag']);
   });
 
-  test('appends modelFlag when provided', async () => {
-    await createConnection(
-      'gemini',
-      ['--experimental-acp'],
-      '/tmp',
-      store,
-      { flag: '-m', value: 'gemini-2.5-flash' },
-    );
-    expect(spawnCalls[0]!.args).toEqual([
-      '--experimental-acp',
-      '-m',
-      'gemini-2.5-flash',
-    ]);
-  });
-
   test('emits connection-status events during startup', async () => {
     const statuses: string[] = [];
     store.on('connection-status', (msg) => statuses.push(msg));

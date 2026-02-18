@@ -12,9 +12,9 @@ describe('StatusBar', () => {
 
   test('displays model name', () => {
     const { lastFrame } = render(
-      <StatusBar engine="gemini" model="gemini-2.5-flash" sessionId="session123" />,
+      <StatusBar engine="copilot" model="claude-sonnet-4.6" sessionId="session123" />,
     );
-    expect(lastFrame()!).toContain('gemini-2.5-flash');
+    expect(lastFrame()!).toContain('claude-sonnet-4.6');
   });
 
   test('truncates session ID to 8 characters', () => {

@@ -1,6 +1,6 @@
 # agent-swarm
 
-Interactive terminal UI for GitHub Copilot, Claude Code, Gemini CLI, OpenCode, Qwen Code, and Codex using the [Agent Client Protocol (ACP)](https://github.com/nichochar/agent-client-protocol). Built with [Ink](https://github.com/vadimdemedes/ink) (React for the terminal).
+Interactive terminal UI for GitHub Copilot, Claude Code, OpenCode, Qwen Code, and Codex using the [Agent Client Protocol (ACP)](https://github.com/nichochar/agent-client-protocol). Built with [Ink](https://github.com/vadimdemedes/ink) (React for the terminal).
 
 Each engine's CLI must be installed separately before use.
 
@@ -45,7 +45,7 @@ Inside the chat, type your prompt and press Enter. Type `exit` or `quit` to clos
 | `src/agent-client.ts` | `AgentClient` — emits session updates to `SessionStore`, auto-accepts permissions, delegates FS/terminal ops. |
 | `src/terminal-manager.ts` | `TerminalManager` — child process lifecycle management. |
 | `src/hooks/useSessionStore.ts` | React hook subscribing to `SessionStore` events. |
-| `src/components/` | Ink UI components: `App`, `Header`, `EngineSelect`, `ModelInput`, `Connecting`, `Chat`, `MessageBubble`, `ToolCallCard`, `ThoughtBlock`, `PlanView`, `StatusBar`, `PromptInput`. |
+| `src/components/` | Ink UI components: `App`, `Header`, `EngineSelect`, `Connecting`, `Chat`, `MessageBubble`, `ToolCallCard`, `ThoughtBlock`, `PlanView`, `StatusBar`, `PromptInput`. |
 
 ## Tech stack
 

@@ -41,7 +41,7 @@ describe('ModelSelect', () => {
   test('renders all model IDs', () => {
     const { lastFrame } = render(
       <ModelSelect
-        engine="gemini"
+        engine="copilot"
         availableModels={MODELS}
         currentModelId={null}
         onSelect={() => {}}

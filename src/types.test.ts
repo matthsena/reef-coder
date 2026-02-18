@@ -16,10 +16,9 @@ describe('ENGINES config', () => {
     expect(engineKeys).toContain('claude-code');
     expect(engineKeys).toContain('codex');
     expect(engineKeys).toContain('copilot');
-    expect(engineKeys).toContain('gemini');
     expect(engineKeys).toContain('opencode');
     expect(engineKeys).toContain('qwen-code');
-    expect(engineKeys).toHaveLength(6);
+    expect(engineKeys).toHaveLength(5);
   });
 
   test('every engine has executable, args array, and model', () => {
@@ -30,31 +29,6 @@ describe('ENGINES config', () => {
       expect(cfg.model).toBeString();
       expect(cfg.model.length).toBeGreaterThan(0);
     }
-  });
-
-  test('only gemini has modelFlag', () => {
-    const withModelFlag = Object.entries(ENGINES).filter(
-      ([, cfg]) => cfg.modelFlag !== undefined,
-    );
-    expect(withModelFlag).toHaveLength(1);
-    expect(withModelFlag[0]![0]).toBe('gemini');
-    expect(withModelFlag[0]![1].modelFlag).toBe('-m');
-  });
-
-  test('gemini has predefinedModels', () => {
-    const gemini = ENGINES['gemini']!;
-    expect(gemini.predefinedModels).toBeArray();
-    expect(gemini.predefinedModels!.length).toBeGreaterThan(0);
-    expect(gemini.predefinedModels).toContain('gemini-2.5-flash');
-    expect(gemini.predefinedModels).toContain('gemini-2.5-pro');
-  });
-
-  test('only gemini has predefinedModels', () => {
-    const withPredefined = Object.entries(ENGINES).filter(
-      ([, cfg]) => cfg.predefinedModels !== undefined,
-    );
-    expect(withPredefined).toHaveLength(1);
-    expect(withPredefined[0]![0]).toBe('gemini');
   });
 
   test('args are arrays of strings', () => {
@@ -88,7 +62,6 @@ describe('ENGINE_LABELS', () => {
     expect(sorted).toEqual([
       'Claude Code',
       'Codex',
-      'Gemini CLI',
       'GitHub Copilot CLI',
       'OpenCode',
       'Qwen Code',
@@ -122,10 +95,9 @@ describe('Type structures', () => {
       'engine-select',
       'connecting',
       'model-select',
-      'model-input',
       'chat',
     ];
-    expect(validScreens).toHaveLength(5);
+    expect(validScreens).toHaveLength(4);
   });
 
   test('ChatMessage shape', () => {

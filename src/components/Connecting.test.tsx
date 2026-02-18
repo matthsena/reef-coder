@@ -12,10 +12,10 @@ describe('Connecting', () => {
 
   test('shows "Connecting to" text', () => {
     const { lastFrame } = render(
-      <Connecting engine="gemini" statusMessages={[]} />,
+      <Connecting engine="copilot" statusMessages={[]} />,
     );
     expect(lastFrame()!).toContain('Connecting to');
-    expect(lastFrame()!).toContain('Gemini CLI');
+    expect(lastFrame()!).toContain('GitHub Copilot CLI');
   });
 
   test('displays status messages', () => {
