@@ -60,6 +60,7 @@ export function App({ workdir }: AppProps) {
     const engineCfg = ENGINES[engine]!;
     createConnection(engineCfg.executable, engineCfg.args, workdir, store)
       .then((result) => {
+        store.off('connection-status', onStatus);
         setConn(result);
         setAvailableModels(result.availableModels);
         setCurrentModelId(result.currentModelId);
@@ -77,6 +78,7 @@ export function App({ workdir }: AppProps) {
         }
       })
       .catch((err: unknown) => {
+        store.off('connection-status', onStatus);
         connectingRef.current = false;
         setStatusMessages((prev) => [...prev, `Error: ${formatError(err)}`]);
       });
