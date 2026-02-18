@@ -29,6 +29,17 @@ export function ModelSelect({
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  if (items.length === 0) {
+    return (
+      <Box flexDirection="column" paddingX={2} paddingY={1}>
+        <Text bold color={color}>{label}</Text>
+        <Box marginTop={1}>
+          <Text dimColor>No models available.</Text>
+        </Box>
+      </Box>
+    );
+  }
+
   useInput((_input, key) => {
     if (key.upArrow) {
       setSelectedIndex((i) => (i > 0 ? i - 1 : items.length - 1));
