@@ -47,6 +47,14 @@ function makeConnectionResult(overrides: Record<string, any> = {}) {
 
 describe('App E2E', () => {
   beforeEach(() => {
+    // Restore default implementation (deferred promise) before each test
+    mockCreateConnection.mockImplementation(
+      () =>
+        new Promise((resolve, reject) => {
+          resolveConnection = resolve;
+          rejectConnection = reject;
+        }),
+    );
     mockCreateConnection.mockClear();
     mockSetSessionModelFn.mockClear();
     mockPrompt.mockClear();
@@ -301,6 +309,49 @@ describe('App E2E', () => {
     await Bun.sleep(W);
 
     expect(lastFrame()!).toContain('OpenCode');
+  });
+
+  test('model-input reconnect error shows error message', async () => {
+    // First call succeeds (initial connect), second call rejects (reconnect)
+    let callCount = 0;
+    mockCreateConnection.mockImplementation(
+      () =>
+        new Promise((resolve, reject) => {
+          callCount++;
+          if (callCount === 1) {
+            resolveConnection = resolve;
+            rejectConnection = reject;
+          } else {
+            // Second call (reconnect) — reject
+            reject(new Error('Reconnect failed'));
+          }
+        }),
+    );
+
+    const { stdin, lastFrame } = render(<App workdir="/tmp" />);
+    await Bun.sleep(W);
+
+    // Navigate to Gemini CLI (has modelFlag)
+    stdin.write(ARROW_DOWN);
+    await Bun.sleep(W);
+    stdin.write(ARROW_DOWN);
+    await Bun.sleep(W);
+    stdin.write(ENTER);
+    await Bun.sleep(W);
+
+    // First connection succeeds
+    resolveConnection(makeConnectionResult());
+    await Bun.sleep(W);
+
+    // On model-input, submit
+    stdin.write(ENTER);
+    await Bun.sleep(W);
+
+    // The reconnect rejects immediately
+    await Bun.sleep(W);
+
+    const frame = lastFrame()!;
+    expect(frame).toContain('Error: Reconnect failed');
   });
 
   test('model-select error shows error message', async () => {
