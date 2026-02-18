@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "49bb73332176",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/Chat.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/49/bb73332176/0/metadata.json",
+      "transcript": "/49/bb73332176/0/full.jsonl",
+      "context": "/49/bb73332176/0/context.md",
+      "content_hash": "/49/bb73332176/0/content_hash.txt",
+      "prompt": "/49/bb73332176/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 216,
+    "cache_creation_tokens": 487046,
+    "cache_read_tokens": 19696906,
+    "output_tokens": 99056,
+    "api_call_count": 191
+  }
+}
