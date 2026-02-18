@@ -3,11 +3,9 @@ import type { SessionStore } from '../store.ts';
 import type { ChatMessage, ToolCallEntry, PlanEntry } from '../types.ts';
 
 function timestamp(): string {
-  return new Date().toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 function emptyMessage(role: 'user' | 'agent'): ChatMessage {
@@ -76,8 +74,11 @@ export function useSessionStore(store: SessionStore) {
     const onTurnEnd = (_stopReason: string) => {
       const msg = currentRef.current;
       if (msg) {
+        const hasContent = msg.text || msg.thoughts || msg.toolCalls.length > 0 || msg.plan.length > 0;
+        if (hasContent) {
+          setMessages((prev) => [...prev, msg]);
+        }
         currentRef.current = null;
-        setMessages((prev) => [...prev, msg]);
         setCurrentMessage(null);
       }
       setStreaming(false);
