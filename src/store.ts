@@ -12,4 +12,9 @@ export interface SessionStoreEvents {
   'turn-end': [stopReason: string];
 }
 
-export class SessionStore extends EventEmitter<SessionStoreEvents> {}
+export class SessionStore extends EventEmitter<SessionStoreEvents> {
+  constructor() {
+    super();
+    this.setMaxListeners(20);
+  }
+}
