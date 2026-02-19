@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "bun run index.ts",
-    "build": "bun link"
+    "build": "bun link && mkdir -p ~/.config/reef && cp .env ~/.config/reef/.env"
   },
   "devDependencies": {
     "@types/bun": "latest",
