@@ -1,55 +1,129 @@
-# agent-swarm
+<p align="center">
+  <img src="logo.png" alt="Reef Coder" width="200" />
+</p>
 
-Interactive terminal UI for GitHub Copilot, Claude Code, OpenCode, Qwen Code, and Codex using the [Agent Client Protocol (ACP)](https://github.com/nichochar/agent-client-protocol). Built with [Ink](https://github.com/vadimdemedes/ink) (React for the terminal).
+<h1 align="center">Reef Coder</h1>
 
-Each engine's CLI must be installed separately before use.
+<p align="center">
+  A unified terminal client for AI coding agents. Connect to Claude Code, GitHub Copilot, OpenCode, Qwen Code, and Codex through a single interface with persistent memory, cross-engine sessions, and voice input.
+</p>
 
-## Setup
+## Why Reef Coder?
+
+Modern developers use multiple AI coding assistants. Each has strengths: Claude excels at reasoning, Copilot integrates with GitHub, Codex handles complex refactors. But switching between them means losing context, repeating yourself, and managing multiple terminal windows.
+
+**Reef Coder solves this.** One interface, many agents, shared memory.
+
+- **Unified Interface** — Same terminal UI for all supported agents
+- **Persistent Sessions** — Your conversation history survives across restarts
+- **Cross-Engine Memory** — Start a task with Claude, continue with Copilot, finish with Codex
+- **Voice Input** — Code hands-free with speech-to-text transcription
+- **Agent Client Protocol** — Built on ACP for standardized agent communication
+
+## Supported Engines
+
+| Engine | CLI Required | Description |
+|--------|--------------|-------------|
+| Claude Code | `claude` | Anthropic's coding assistant |
+| GitHub Copilot | `gh copilot` | GitHub's AI pair programmer |
+| OpenCode | `opencode` | Open-source coding agent |
+| Qwen Code | `qwen` | Alibaba's coding model |
+| Codex | `codex` | OpenAI's code generation model |
+
+## Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/user/reef-coder.git
+cd reef-coder
+
+# Install dependencies
 bun install
 ```
+
+**Prerequisites:**
+- [Bun](https://bun.sh) runtime
+- At least one supported engine CLI installed
 
 ## Usage
 
 ```bash
-bun run index.ts
-```
-
-On launch, the app presents an interactive engine selection screen, then asks for the model (pre-filled with the engine default), then connects and enters a chat REPL.
-
-### Options
-
-- `--workdir <path>` — Set the working directory for the agent (defaults to current directory)
-
-### Examples
-
-```bash
-# Launch with interactive engine selection
+# Start Reef Coder
 bun run index.ts
 
-# Set a custom working directory
+# With custom working directory
 bun run index.ts --workdir /path/to/project
 ```
 
-Inside the chat, type your prompt and press Enter. Type `exit` or `quit` to close.
+### Interactive Flow
+
+1. **Select Engine** — Choose which AI agent to connect to
+2. **Select Model** — Pick the model variant (engine-specific defaults provided)
+3. **Select Session** — Create new or continue existing session
+4. **Chat** — Start coding with your AI assistant
+
+### Voice Input
+
+Press the voice input key to start recording. Speak your prompt naturally and Reef Coder will transcribe it and send to the agent. Perfect for:
+
+- Describing complex requirements without typing
+- Hands-free coding while reviewing documentation
+- Accessibility for developers who prefer speech
+
+### Session Management
+
+Sessions are stored in `.reef/sessions/` within your working directory. Each session preserves:
+
+- Full conversation history
+- Message timestamps
+- Engine used for each interaction
+
+Resume any session with any engine — your context carries over.
+
+## Commands
+
+Inside a chat session:
+
+- `exit` or `quit` — Close the session
+- `/command` — Execute slash commands (engine-specific)
 
 ## Architecture
 
-| File | Description |
-|------|-------------|
-| `index.ts` | Entry point. Parses `--workdir`, renders the Ink `<App>` component. |
-| `src/types.ts` | Shared types and `ENGINES` config dict. |
-| `src/store.ts` | `SessionStore` — typed EventEmitter bridging ACP callbacks to React state. |
-| `src/connection.ts` | Spawns the agent process, wires up ACP streams, initializes session. |
-| `src/agent-client.ts` | `AgentClient` — emits session updates to `SessionStore`, auto-accepts permissions, delegates FS/terminal ops. |
-| `src/terminal-manager.ts` | `TerminalManager` — child process lifecycle management. |
-| `src/hooks/useSessionStore.ts` | React hook subscribing to `SessionStore` events. |
-| `src/components/` | Ink UI components: `App`, `Header`, `EngineSelect`, `Connecting`, `Chat`, `MessageBubble`, `ToolCallCard`, `ThoughtBlock`, `PlanView`, `StatusBar`, `PromptInput`. |
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Reef Coder CLI                       │
+├─────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │
+│  │   Engine    │  │   Session   │  │   Terminal  │     │
+│  │   Select    │  │   Select    │  │     Chat    │     │
+│  └─────────────┘  └─────────────┘  └─────────────┘     │
+├─────────────────────────────────────────────────────────┤
+│              Voice Input + Session Store                │
+│              (Speech-to-Text + React State)             │
+├─────────────────────────────────────────────────────────┤
+│                  Agent Client (ACP)                     │
+├──────────┬──────────┬──────────┬──────────┬────────────┤
+│  Claude  │  Copilot │ OpenCode │   Qwen   │   Codex    │
+└──────────┴──────────┴──────────┴──────────┴────────────┘
+```
 
-## Tech stack
+## Tech Stack
 
-- **Runtime:** [Bun](https://bun.com)
+- **Runtime:** [Bun](https://bun.sh)
 - **Language:** TypeScript (strict mode)
-- **UI:** [Ink](https://github.com/vadimdemedes/ink) (React for the terminal)
-- **Protocol:** [Agent Client Protocol SDK](https://www.npmjs.com/package/@agentclientprotocol/sdk)
+- **UI Framework:** [Ink](https://github.com/vadimdemedes/ink) (React for terminal)
+- **Protocol:** [Agent Client Protocol](https://github.com/nichochar/agent-client-protocol)
+
+## Development
+
+```bash
+# Type check
+bunx tsc --noEmit
+
+# Run
+bun run index.ts
+```
+
+## License
+
+MIT

@@ -119,7 +119,7 @@ export function App({ workdir }: AppProps) {
         await setSessionModel(conn.connection, conn.sessionId, modelId, store);
         setModel(modelId);
       } catch (err) {
-        store.emit('connection-status', `Erro ao trocar modelo: ${formatError(err)}`);
+        store.emit('connection-status', `Error changing model: ${formatError(err)}`);
       }
     },
     [conn, store],

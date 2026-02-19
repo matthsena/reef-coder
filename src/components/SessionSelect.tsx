@@ -27,7 +27,7 @@ export function SessionSelect({
 }: SessionSelectProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [items, setItems] = useState<SessionItem[]>([
-    { type: 'new', label: 'Nova Sessao', color: '#22C55E' },
+    { type: 'new', label: 'New Session', color: '#22C55E' },
   ]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +37,7 @@ export function SessionSelect({
       try {
         const sessions = await listSessions(workdir);
         const sessionItems: SessionItem[] = [
-          { type: 'new', label: 'Nova Sessao', color: '#22C55E' },
+          { type: 'new', label: 'New Session', color: '#22C55E' },
         ];
 
         for (const session of sessions) {
@@ -48,12 +48,12 @@ export function SessionSelect({
 
           const preview = lastMsg
             ? lastMsg.text.slice(0, 40) + (lastMsg.text.length > 40 ? '...' : '')
-            : 'Sessao vazia';
+            : 'Empty session';
 
           const shortId = session.id.slice(0, 8);
           const updatedDate = new Date(session.updatedAt);
-          const dateStr = updatedDate.toLocaleDateString('pt-BR');
-          const timeStr = updatedDate.toLocaleTimeString('pt-BR', {
+          const dateStr = updatedDate.toLocaleDateString('en-US');
+          const timeStr = updatedDate.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
           });
@@ -104,7 +104,7 @@ export function SessionSelect({
   if (loading) {
     return (
       <Box paddingX={2} paddingY={1}>
-        <Text>Carregando sessoes...</Text>
+        <Text>Loading sessions...</Text>
       </Box>
     );
   }
@@ -112,15 +112,15 @@ export function SessionSelect({
   if (error) {
     return (
       <Box flexDirection="column" paddingX={2} paddingY={1}>
-        <Text color="red">Erro ao carregar sessoes: {error}</Text>
-        <Text dimColor>Pressione Enter para criar nova sessao</Text>
+        <Text color="red">Error loading sessions: {error}</Text>
+        <Text dimColor>Press Enter to create a new session</Text>
       </Box>
     );
   }
 
   return (
     <Box flexDirection="column" paddingX={2} paddingY={1}>
-      <Text bold>Selecione a sessao ({engine}):</Text>
+      <Text bold>Select session ({engine}):</Text>
       <Box flexDirection="column" marginTop={1}>
         {items.map((item, index) => {
           const isSelected = index === selectedIndex;
@@ -146,7 +146,7 @@ export function SessionSelect({
       </Box>
       <Box marginTop={1}>
         <Text dimColor>
-          {'  '}Up/Down navegar {'  '} Enter selecionar
+          {'  '}Up/Down navigate {'  '} Enter select
         </Text>
       </Box>
     </Box>

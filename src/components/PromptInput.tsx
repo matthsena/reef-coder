@@ -100,7 +100,7 @@ export function PromptInput({ disabled, onSubmit }: PromptInputProps) {
             );
           })}
           <Box marginTop={1}>
-            <Text dimColor italic>Tab: selecionar | Enter: executar | Setas: navegar</Text>
+            <Text dimColor italic>Tab: select | Enter: execute | Arrows: navigate</Text>
           </Box>
         </Box>
       )}
@@ -144,7 +144,7 @@ export function PromptInput({ disabled, onSubmit }: PromptInputProps) {
         <Text color="red">[voice error: {error}]</Text>
       )}
       {!disabled && voiceState === 'idle' && !error && !showCommandPreview && (
-        <Text dimColor>Tab: voice input | /: comandos</Text>
+        <Text dimColor>Tab: voice input | /: commands</Text>
       )}
     </Box>
   );

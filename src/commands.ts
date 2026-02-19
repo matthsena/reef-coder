@@ -8,27 +8,27 @@ export const COMMANDS: Command[] = [
   {
     name: '/switch',
     aliases: ['/engine'],
-    description: 'Trocar para outro engine/modelo',
+    description: 'Switch to another engine/model',
   },
   {
     name: '/exit',
     aliases: ['/quit'],
-    description: 'Sair do aplicativo',
+    description: 'Exit the application',
   },
   {
     name: '/clear',
     aliases: [],
-    description: 'Limpar histórico da sessão',
+    description: 'Clear session history',
   },
   {
     name: '/help',
     aliases: [],
-    description: 'Mostrar comandos disponíveis',
+    description: 'Show available commands',
   },
   {
     name: '/model',
     aliases: [],
-    description: 'Alterar modelo da sessão atual (ex: /model <id>)',
+    description: 'Change current session model (e.g., /model <id>)',
   },
 ];
 

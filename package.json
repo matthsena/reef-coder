@@ -1,5 +1,5 @@
 {
-  "name": "agent-swarm",
+  "name": "reef-coder",
   "module": "index.ts",
   "type": "module",
   "private": true,
