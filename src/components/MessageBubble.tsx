@@ -3,6 +3,7 @@ import type { ChatMessage } from '../types.ts';
 import { ToolCallCard } from './ToolCallCard.tsx';
 import { ThoughtBlock } from './ThoughtBlock.tsx';
 import { PlanView } from './PlanView.tsx';
+import { renderMarkdown } from '../markdown.tsx';
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -29,8 +30,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       ))}
       {message.plan.length > 0 ? <PlanView entries={message.plan} /> : null}
       {message.text ? (
-        <Box paddingLeft={2}>
-          <Text>{message.text}</Text>
+        <Box paddingLeft={2} flexDirection="column">
+          <Text>{renderMarkdown(message.text)}</Text>
         </Box>
       ) : null}
     </Box>
