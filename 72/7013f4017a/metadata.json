@@ -3,9 +3,11 @@
   "checkpoint_id": "727013f4017a",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
-    "src/components/EngineSelect.tsx"
+    ".gitignore",
+    "src/components/EngineSelect.tsx",
+    "src/executable-check.ts"
   ],
   "sessions": [
     {
@@ -14,6 +16,13 @@
       "context": "/72/7013f4017a/0/context.md",
       "content_hash": "/72/7013f4017a/0/content_hash.txt",
       "prompt": "/72/7013f4017a/0/prompt.txt"
+    },
+    {
+      "metadata": "/72/7013f4017a/1/metadata.json",
+      "transcript": "/72/7013f4017a/1/full.jsonl",
+      "context": "",
+      "content_hash": "/72/7013f4017a/1/content_hash.txt",
+      "prompt": ""
     }
   ],
   "token_usage": {
