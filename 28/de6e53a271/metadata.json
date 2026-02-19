@@ -3,10 +3,18 @@
   "checkpoint_id": "28de6e53a271",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
+    ".env.sample",
+    ".gitignore",
+    "CLAUDE.md",
+    "README.md",
+    "logo.png",
     "package.json",
-    "src/components/PromptInput.tsx"
+    "src/commands.ts",
+    "src/components/App.tsx",
+    "src/components/PromptInput.tsx",
+    "src/components/SessionSelect.tsx"
   ],
   "sessions": [
     {
@@ -22,6 +30,13 @@
       "context": "/28/de6e53a271/1/context.md",
       "content_hash": "/28/de6e53a271/1/content_hash.txt",
       "prompt": "/28/de6e53a271/1/prompt.txt"
+    },
+    {
+      "metadata": "/28/de6e53a271/2/metadata.json",
+      "transcript": "/28/de6e53a271/2/full.jsonl",
+      "context": "",
+      "content_hash": "/28/de6e53a271/2/content_hash.txt",
+      "prompt": ""
     }
   ],
   "token_usage": {
