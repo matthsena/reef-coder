@@ -28,6 +28,9 @@ interface ChatProps {
   session: Session;
   onExit: () => void | Promise<void>;
   onSwitchEngine: () => void | Promise<void>;
+  availableModels: { modelId: string }[];
+  onModelChange: (modelId: string) => Promise<void>;
+  onSelectModel: () => void;
   onSessionUpdate: (session: Session) => void;
 }
 
@@ -41,6 +44,9 @@ export function Chat({
   session,
   onExit,
   onSwitchEngine,
+  availableModels,
+  onModelChange,
+  onSelectModel,
   onSessionUpdate,
 }: ChatProps) {
   const contextInjectedRef = useRef(false);
@@ -64,6 +70,17 @@ export function Chat({
     async (text: string) => {
       // Only treat as command if starts with /
       if (text.startsWith('/')) {
+        // Handle /model <argument> — change model without switching engine
+        if (text.startsWith('/model ')) {
+          const modelId = text.slice('/model '.length).trim();
+          if (modelId) {
+            store.emit('agent-message-chunk', `Alterando modelo para: ${modelId}...\n`);
+            store.emit('turn-end', 'complete');
+            await onModelChange(modelId);
+            return;
+          }
+        }
+
         const command = isValidCommand(text);
         
         if (command) {
@@ -87,6 +104,10 @@ export function Chat({
               }).join('\n');
               store.emit('agent-message-chunk', `Comandos disponíveis:\n${helpText}\n`);
               store.emit('turn-end', 'complete');
+              return;
+            }
+            case '/model': {
+              onSelectModel();
               return;
             }
           }
@@ -149,6 +170,9 @@ export function Chat({
       clearMessages,
       onExit,
       onSwitchEngine,
+      availableModels,
+      onModelChange,
+      onSelectModel,
       exit,
     ],
   );

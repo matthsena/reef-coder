@@ -32,15 +32,13 @@ export function App({ workdir }: AppProps) {
   const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]);
   const [currentModelId, setCurrentModelId] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [midChatModelSelect, setMidChatModelSelect] = useState(false);
   const [conn, setConn] = useState<{
     connection: acp.ClientSideConnection;
     sessionId: string;
     shutdown: () => Promise<void>;
   } | null>(null);
-  // Track whether we've already initiated a connection attempt for the
-  // current engine so the effect doesn't fire twice in React strict-mode.
   const connectingRef = useRef(false);
-  // Track whether the component is still mounted to avoid stale state updates.
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
 
@@ -71,7 +69,6 @@ export function App({ workdir }: AppProps) {
     setScreen('connecting');
   }, []);
 
-  // Connect to engine after selection — fetch available models
   useEffect(() => {
     if (screen !== 'connecting' || !engine || conn || connectingRef.current) return;
     connectingRef.current = true;
@@ -97,10 +94,8 @@ export function App({ workdir }: AppProps) {
         setAvailableModels(result.availableModels);
         setCurrentModelId(result.currentModelId);
         if (result.availableModels.length > 0) {
-          // Engine provides model list via ACP
           setScreen('model-select');
         } else {
-          // No model selection available — proceed with engine default
           setModel(result.currentModelId ?? engineCfg.model);
           setScreen('chat');
         }
@@ -109,7 +104,6 @@ export function App({ workdir }: AppProps) {
         store.off('connection-status', onStatus);
         connectingRef.current = false;
         setStatusMessages((prev) => [...prev, `Error: ${formatError(err)}`]);
-        // Navigate away to prevent rapid re-connection attempts
         setScreen('engine-select');
       });
 
@@ -118,10 +112,29 @@ export function App({ workdir }: AppProps) {
     };
   }, [screen, engine, conn, workdir, store]);
 
-  // Handle ACP-based model selection (engines that return availableModels)
-  const handleModelSelect = useCallback(
-    (selectedModel: string) => {
+  const handleModelChange = useCallback(
+    async (modelId: string) => {
       if (!conn) return;
+      try {
+        await setSessionModel(conn.connection, conn.sessionId, modelId, store);
+        setModel(modelId);
+      } catch (err) {
+        store.emit('connection-status', `Erro ao trocar modelo: ${formatError(err)}`);
+      }
+    },
+    [conn, store],
+  );
+
+  const handleModelSelect = useCallback(
+    async (selectedModel: string) => {
+      if (!conn) return;
+
+      if (midChatModelSelect) {
+        setMidChatModelSelect(false);
+        setScreen('chat');
+        await handleModelChange(selectedModel);
+        return;
+      }
 
       setModel(selectedModel);
       setScreen('connecting');
@@ -147,8 +160,13 @@ export function App({ workdir }: AppProps) {
           setScreen('model-select');
         });
     },
-    [conn, store],
+    [conn, store, midChatModelSelect, handleModelChange],
   );
+
+  const handleSelectModel = useCallback(() => {
+    setMidChatModelSelect(true);
+    setScreen('model-select');
+  }, []);
 
   const handleExit = useCallback(async () => {
     if (conn) await conn.shutdown();
@@ -213,6 +231,9 @@ export function App({ workdir }: AppProps) {
           session={session}
           onExit={handleExit}
           onSwitchEngine={handleSwitchEngine}
+          availableModels={availableModels}
+          onModelChange={handleModelChange}
+          onSelectModel={handleSelectModel}
           onSessionUpdate={handleSessionUpdate}
         />
       )}

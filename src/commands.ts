@@ -25,6 +25,11 @@ export const COMMANDS: Command[] = [
     aliases: [],
     description: 'Mostrar comandos disponíveis',
   },
+  {
+    name: '/model',
+    aliases: [],
+    description: 'Alterar modelo da sessão atual (ex: /model <id>)',
+  },
 ];
 
 export function getMatchingCommands(input: string): Command[] {
