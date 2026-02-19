@@ -3,7 +3,7 @@ import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { Session, ChatMessage } from './types.ts';
 
-const DATA_DIR = '.data';
+const DATA_DIR = '.reef';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_SESSIONS_TO_LOAD = 50;
@@ -132,11 +132,11 @@ export function createSession(
   const now = new Date();
   const id = randomUUID();
 
-  const timeStr = now.toLocaleTimeString('pt-BR', {
+  const timeStr = now.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
   });
-  const dateStr = now.toLocaleDateString('pt-BR');
+  const dateStr = now.toLocaleDateString('en-US');
 
   return {
     id,
