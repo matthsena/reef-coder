@@ -1,0 +1,8 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+outra coisa que percebi! quando eu estou no menu de sessoes aparece ao lado do id o nome da ultima engine... nao quero isso, nao é necessario
+
