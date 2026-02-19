@@ -3,9 +3,16 @@
   "checkpoint_id": "006bca7234c9",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
-    "src/hooks/useSessionStore.ts"
+    ".gitignore",
+    "src/components/App.tsx",
+    "src/components/Chat.tsx",
+    "src/components/SessionSelect.tsx",
+    "src/components/StatusBar.tsx",
+    "src/hooks/useSessionStore.ts",
+    "src/session-manager.ts",
+    "src/types.ts"
   ],
   "sessions": [
     {
@@ -14,6 +21,13 @@
       "context": "/00/6bca7234c9/0/context.md",
       "content_hash": "/00/6bca7234c9/0/content_hash.txt",
       "prompt": "/00/6bca7234c9/0/prompt.txt"
+    },
+    {
+      "metadata": "/00/6bca7234c9/1/metadata.json",
+      "transcript": "/00/6bca7234c9/1/full.jsonl",
+      "context": "",
+      "content_hash": "/00/6bca7234c9/1/content_hash.txt",
+      "prompt": ""
     }
   ],
   "token_usage": {

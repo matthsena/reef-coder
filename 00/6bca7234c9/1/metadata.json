@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "006bca7234c9",
+  "session_id": "94d3d578-c6bc-4a8d-91c6-bc81b85e41b8",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T00:16:21.570345621Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".gitignore",
+    "src/components/App.tsx",
+    "src/components/Chat.tsx",
+    "src/components/SessionSelect.tsx",
+    "src/components/StatusBar.tsx",
+    "src/hooks/useSessionStore.ts",
+    "src/session-manager.ts",
+    "src/types.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "bb051703d8cc",
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T00:16:21.56733442Z",
+    "agent_lines": 530,
+    "human_added": 2,
+    "human_modified": 1,
+    "human_removed": 0,
+    "total_committed": 533,
+    "agent_percentage": 99.43714821763602
+  }
+}
