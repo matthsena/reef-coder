@@ -1,5 +1,6 @@
 export type Screen =
   | 'engine-select'
+  | 'session-select'
   | 'connecting'
   | 'model-select'
   | 'chat';
@@ -72,4 +73,15 @@ export interface ChatMessage {
   toolCalls: ToolCallEntry[];
   plan: PlanEntry[];
   timestamp: string;
+}
+
+export interface Session {
+  id: string;
+  name: string;
+  workdir: string;
+  createdAt: string;
+  updatedAt: string;
+  lastEngine: string;
+  lastModel: string;
+  messages: ChatMessage[];
 }

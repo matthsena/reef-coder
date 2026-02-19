@@ -15,10 +15,11 @@ export function StatusBar({ engine, model, sessionId }: StatusBarProps) {
   return (
     <Box borderStyle="single" borderColor="gray" paddingX={1}>
       <Text bold color={color}>{label}</Text>
-      <Text dimColor> │ </Text>
+      <Text dimColor> | </Text>
       <Text color="yellow">{model}</Text>
-      <Text dimColor> │ </Text>
-      <Text dimColor>session: {shortSession}</Text>
+      <Text dimColor> | </Text>
+      <Text color="cyan">{shortSession}</Text>
+      <Text dimColor>  /switch to change engine</Text>
     </Box>
   );
 }

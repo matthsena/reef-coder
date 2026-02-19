@@ -2,11 +2,13 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Box } from 'ink';
 import type * as acp from '@agentclientprotocol/sdk';
 import { ENGINES } from '../types.ts';
-import type { Screen } from '../types.ts';
+import type { Screen, Session } from '../types.ts';
 import { SessionStore } from '../store.ts';
 import { createConnection, setSessionModel } from '../connection.ts';
 import type { AvailableModel } from '../connection.ts';
+import { createSession, saveSession } from '../session-manager.ts';
 import { EngineSelect } from './EngineSelect.tsx';
+import { SessionSelect } from './SessionSelect.tsx';
 import { ModelSelect } from './ModelSelect.tsx';
 import { Connecting } from './Connecting.tsx';
 import { Chat } from './Chat.tsx';
@@ -29,6 +31,7 @@ export function App({ workdir }: AppProps) {
   const [store] = useState(() => new SessionStore());
   const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]);
   const [currentModelId, setCurrentModelId] = useState<string | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [conn, setConn] = useState<{
     connection: acp.ClientSideConnection;
     sessionId: string;
@@ -43,6 +46,28 @@ export function App({ workdir }: AppProps) {
 
   const handleEngineSelect = useCallback((selected: string) => {
     setEngine(selected);
+    setScreen('session-select');
+  }, []);
+
+  const handleNewSession = useCallback(() => {
+    const engineCfg = ENGINES[engine];
+    if (!engineCfg) {
+      console.error(`Unknown engine: ${engine}`);
+      return;
+    }
+    const newSession = createSession(workdir, engine, engineCfg.model);
+    setSession(newSession);
+    saveSession(workdir, newSession)
+      .catch((err) => {
+        console.error('[session] Failed to save new session:', err);
+      })
+      .finally(() => {
+        setScreen('connecting');
+      });
+  }, [engine, workdir]);
+
+  const handleExistingSession = useCallback((existingSession: Session) => {
+    setSession(existingSession);
     setScreen('connecting');
   }, []);
 
@@ -56,7 +81,15 @@ export function App({ workdir }: AppProps) {
     };
     store.on('connection-status', onStatus);
 
-    const engineCfg = ENGINES[engine]!;
+    const engineCfg = ENGINES[engine];
+    if (!engineCfg) {
+      store.off('connection-status', onStatus);
+      connectingRef.current = false;
+      setStatusMessages((prev) => [...prev, `Error: Unknown engine ${engine}`]);
+      setScreen('engine-select');
+      return;
+    }
+
     createConnection(engineCfg.executable, engineCfg.args, workdir, store)
       .then((result) => {
         store.off('connection-status', onStatus);
@@ -76,6 +109,8 @@ export function App({ workdir }: AppProps) {
         store.off('connection-status', onStatus);
         connectingRef.current = false;
         setStatusMessages((prev) => [...prev, `Error: ${formatError(err)}`]);
+        // Navigate away to prevent rapid re-connection attempts
+        setScreen('engine-select');
       });
 
     return () => {
@@ -119,10 +154,39 @@ export function App({ workdir }: AppProps) {
     if (conn) await conn.shutdown();
   }, [conn]);
 
+  const handleSwitchEngine = useCallback(async () => {
+    if (conn) await conn.shutdown();
+    setConn(null);
+    connectingRef.current = false;
+    setStatusMessages([]);
+    setAvailableModels([]);
+    setCurrentModelId(null);
+    setScreen('engine-select');
+  }, [conn]);
+
+  const handleSessionUpdate = useCallback(
+    (updatedSession: Session) => {
+      setSession(updatedSession);
+      saveSession(workdir, updatedSession).catch((err) => {
+        console.error('[session] Failed to save session:', err);
+      });
+    },
+    [workdir],
+  );
+
   return (
     <Box flexDirection="column">
       {screen === 'engine-select' && (
         <EngineSelect onSelect={handleEngineSelect} />
+      )}
+
+      {screen === 'session-select' && (
+        <SessionSelect
+          workdir={workdir}
+          engine={engine}
+          onSelectNew={handleNewSession}
+          onSelectExisting={handleExistingSession}
+        />
       )}
 
       {screen === 'connecting' && (
@@ -138,7 +202,7 @@ export function App({ workdir }: AppProps) {
         />
       )}
 
-      {screen === 'chat' && conn && (
+      {screen === 'chat' && conn && session && (
         <Chat
           engine={engine}
           model={model}
@@ -146,7 +210,10 @@ export function App({ workdir }: AppProps) {
           connection={conn.connection}
           store={store}
           workdir={workdir}
+          session={session}
           onExit={handleExit}
+          onSwitchEngine={handleSwitchEngine}
+          onSessionUpdate={handleSessionUpdate}
         />
       )}
     </Box>

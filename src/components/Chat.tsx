@@ -1,10 +1,14 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Box, Static, useApp } from 'ink';
 import type * as acp from '@agentclientprotocol/sdk';
 import type { SessionStore } from '../store.ts';
-import type { ChatMessage } from '../types.ts';
+import type { ChatMessage, Session } from '../types.ts';
 import { useSessionStore } from '../hooks/useSessionStore.ts';
 import { buildPromptBlocks } from '../image-utils.ts';
+import {
+  formatSessionContext,
+  updateSessionMessages,
+} from '../session-manager.ts';
 import { MessageBubble } from './MessageBubble.tsx';
 import { StatusBar } from './StatusBar.tsx';
 import { PromptInput } from './PromptInput.tsx';
@@ -20,7 +24,10 @@ interface ChatProps {
   connection: acp.ClientSideConnection;
   store: SessionStore;
   workdir: string;
+  session: Session;
   onExit: () => void | Promise<void>;
+  onSwitchEngine: () => void | Promise<void>;
+  onSessionUpdate: (session: Session) => void;
 }
 
 export function Chat({
@@ -30,10 +37,26 @@ export function Chat({
   connection,
   store,
   workdir,
+  session,
   onExit,
+  onSwitchEngine,
+  onSessionUpdate,
 }: ChatProps) {
+  const contextInjectedRef = useRef(false);
+
+  const handleMessagesChange = useCallback(
+    (newMessages: ChatMessage[]) => {
+      const updated = updateSessionMessages(session, newMessages, engine, model);
+      onSessionUpdate(updated);
+    },
+    [session, engine, model, onSessionUpdate],
+  );
+
   const { messages, currentMessage, streaming, addUserMessage } =
-    useSessionStore(store);
+    useSessionStore(store, {
+      initialMessages: session.messages,
+      onMessagesChange: handleMessagesChange,
+    });
   const { exit } = useApp();
 
   const handleSubmit = useCallback(
@@ -44,12 +67,29 @@ export function Chat({
         return;
       }
 
+      if (text === '/switch' || text === '/engine') {
+        await onSwitchEngine();
+        return;
+      }
+
       addUserMessage(text);
 
       try {
+        // Inject context from previous engine on first prompt if session has history
+        let promptText = text;
+        if (
+          !contextInjectedRef.current &&
+          session.messages.length > 0 &&
+          session.lastEngine !== engine
+        ) {
+          const context = formatSessionContext(session);
+          promptText = context + text;
+          contextInjectedRef.current = true;
+        }
+
         const result = await connection.prompt({
           sessionId,
-          prompt: await buildPromptBlocks(text, workdir),
+          prompt: await buildPromptBlocks(promptText, workdir),
         });
         store.emit('turn-end', result.stopReason);
       } catch (err) {
@@ -65,15 +105,26 @@ export function Chat({
         store.emit('turn-end', 'error');
       }
     },
-    [connection, sessionId, store, workdir, addUserMessage, onExit, exit],
+    [
+      connection,
+      sessionId,
+      store,
+      workdir,
+      session,
+      engine,
+      addUserMessage,
+      onExit,
+      onSwitchEngine,
+      exit,
+    ],
   );
 
   const staticItems: StaticItem[] = useMemo(
     () => [
-      { type: 'header' as const, engine, model, sessionId },
+      { type: 'header' as const, engine, model, sessionId: session.id },
       ...messages.map((msg, index) => ({ type: 'message' as const, msg, index })),
     ],
-    [engine, model, sessionId, messages],
+    [engine, model, session.id, messages],
   );
 
   return (

@@ -19,13 +19,43 @@ function emptyMessage(role: 'user' | 'agent'): ChatMessage {
   };
 }
 
-export function useSessionStore(store: SessionStore) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+interface UseSessionStoreOptions {
+  initialMessages?: ChatMessage[];
+  onMessagesChange?: (messages: ChatMessage[]) => void;
+}
+
+export function useSessionStore(
+  store: SessionStore,
+  options: UseSessionStoreOptions = {},
+) {
+  const { initialMessages = [], onMessagesChange } = options;
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [currentMessage, setCurrentMessage] = useState<ChatMessage | null>(
     null,
   );
   const [streaming, setStreaming] = useState(false);
   const currentRef = useRef<ChatMessage | null>(null);
+  const onMessagesChangeRef = useRef(onMessagesChange);
+  onMessagesChangeRef.current = onMessagesChange;
+
+  // Track if this is the initial render to avoid calling onMessagesChange
+  const isInitialRender = useRef(true);
+  const prevMessagesLengthRef = useRef(initialMessages.length);
+
+  // Notify parent of message changes via effect (not during render)
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
+    // Only notify if messages actually changed (new message added)
+    if (messages.length !== prevMessagesLengthRef.current) {
+      prevMessagesLengthRef.current = messages.length;
+      if (onMessagesChangeRef.current) {
+        onMessagesChangeRef.current(messages);
+      }
+    }
+  }, [messages]);
 
   useEffect(() => {
     const onChunk = (text: string) => {
@@ -74,7 +104,8 @@ export function useSessionStore(store: SessionStore) {
     const onTurnEnd = (_stopReason: string) => {
       const msg = currentRef.current;
       if (msg) {
-        const hasContent = msg.text || msg.thoughts || msg.toolCalls.length > 0 || msg.plan.length > 0;
+        const hasContent =
+          msg.text || msg.thoughts || msg.toolCalls.length > 0 || msg.plan.length > 0;
         if (hasContent) {
           setMessages((prev) => [...prev, msg]);
         }
