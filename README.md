@@ -50,6 +50,19 @@ bun run build
 
 After that, you can run `reef` from anywhere in your terminal.
 
+### Configuration
+
+Reef Coder loads environment variables from `~/.config/reef/.env`, so your API keys work from any directory without setting them globally.
+
+```bash
+# Create the config directory
+mkdir -p ~/.config/reef
+
+# Add your API keys
+cp .env.sample ~/.config/reef/.env
+# Edit ~/.config/reef/.env with your keys
+```
+
 ## Usage
 
 ```bash
