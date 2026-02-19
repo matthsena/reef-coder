@@ -1,0 +1,25 @@
+entire status
+
+---
+
+[Request interrupted by user]
+
+---
+
+so i want to check if each executable are installed in my computer on startup @src/types.ts
+
+---
+
+qual descrição vc colocaria no about do github para tornar esse produto mais chamativo?
+
+---
+
+quero que a parte de audio seja destacada
+
+---
+
+agora quero que vc crie um script de build em @package.json de forma que instale essa CLI global no path e eu iniciando com reef no terminal ja inicia o agene!!  cria o script de dev tbm que seria so bun run index.ts
+
+---
+
+legal! deixe as instruções de instalação no README
