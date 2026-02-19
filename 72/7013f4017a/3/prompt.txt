@@ -1,0 +1,9 @@
+entire status
+
+---
+
+[Request interrupted by user]
+
+---
+
+so i want to check if each executable are installed in my computer on startup @src/types.ts
