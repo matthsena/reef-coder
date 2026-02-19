@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "402398ffd174",
+  "session_id": "94d3d578-c6bc-4a8d-91c6-bc81b85e41b8",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T00:59:19.255110184Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/commands.ts",
+    "src/components/App.tsx",
+    "src/components/Chat.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "bb051703d8cc",
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T00:59:19.25249637Z",
+    "agent_lines": 60,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 60,
+    "agent_percentage": 100
+  }
+}
