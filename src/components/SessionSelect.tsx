@@ -61,7 +61,7 @@ export function SessionSelect({
           sessionItems.push({
             type: 'existing',
             session,
-            label: `[${shortId}] ${session.lastEngine}`,
+            label: `[${shortId}]`,
             sublabel: `${dateStr} ${timeStr} | ${session.messages.length} msgs | ${preview}`,
             color: ENGINE_COLORS[session.lastEngine] ?? '#FFFFFF',
           });
