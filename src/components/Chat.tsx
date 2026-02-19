@@ -9,6 +9,7 @@ import {
   formatSessionContext,
   updateSessionMessages,
 } from '../session-manager.ts';
+import { isValidCommand, COMMANDS } from '../commands.ts';
 import { MessageBubble } from './MessageBubble.tsx';
 import { StatusBar } from './StatusBar.tsx';
 import { PromptInput } from './PromptInput.tsx';
@@ -52,7 +53,7 @@ export function Chat({
     [session, engine, model, onSessionUpdate],
   );
 
-  const { messages, currentMessage, streaming, addUserMessage } =
+  const { messages, currentMessage, streaming, addUserMessage, clearMessages } =
     useSessionStore(store, {
       initialMessages: session.messages,
       onMessagesChange: handleMessagesChange,
@@ -61,14 +62,46 @@ export function Chat({
 
   const handleSubmit = useCallback(
     async (text: string) => {
+      // Only treat as command if starts with /
+      if (text.startsWith('/')) {
+        const command = isValidCommand(text);
+        
+        if (command) {
+          switch (command.name) {
+            case '/switch':
+              await onSwitchEngine();
+              return;
+            case '/exit':
+              await onExit();
+              exit();
+              return;
+            case '/clear':
+              clearMessages();
+              store.emit('agent-message-chunk', '[Histórico limpo]\n');
+              store.emit('turn-end', 'complete');
+              return;
+            case '/help': {
+              const helpText = COMMANDS.map((cmd) => {
+                const aliases = cmd.aliases.length > 0 ? ` (${cmd.aliases.join(', ')})` : '';
+                return `  ${cmd.name}${aliases} - ${cmd.description}`;
+              }).join('\n');
+              store.emit('agent-message-chunk', `Comandos disponíveis:\n${helpText}\n`);
+              store.emit('turn-end', 'complete');
+              return;
+            }
+          }
+        } else {
+          // Invalid command
+          store.emit('agent-message-chunk', `[Comando desconhecido: ${text}]\nDigite /help para ver comandos disponíveis.\n`);
+          store.emit('turn-end', 'complete');
+          return;
+        }
+      }
+
+      // Legacy support for exit/quit without slash
       if (text === 'exit' || text === 'quit') {
         await onExit();
         exit();
-        return;
-      }
-
-      if (text === '/switch' || text === '/engine') {
-        await onSwitchEngine();
         return;
       }
 
@@ -113,6 +146,7 @@ export function Chat({
       session,
       engine,
       addUserMessage,
+      clearMessages,
       onExit,
       onSwitchEngine,
       exit,

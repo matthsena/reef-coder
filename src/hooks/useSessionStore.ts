@@ -140,5 +140,10 @@ export function useSessionStore(
     setStreaming(true);
   }, []);
 
-  return { messages, currentMessage, streaming, addUserMessage };
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+    prevMessagesLengthRef.current = 0;
+  }, []);
+
+  return { messages, currentMessage, streaming, addUserMessage, clearMessages };
 }
