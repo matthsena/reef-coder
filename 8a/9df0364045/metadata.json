@@ -3,9 +3,11 @@
   "checkpoint_id": "8a9df0364045",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
-    "index.ts"
+    "README.md",
+    "index.ts",
+    "package.json"
   ],
   "sessions": [
     {
@@ -14,6 +16,13 @@
       "context": "/8a/9df0364045/0/context.md",
       "content_hash": "/8a/9df0364045/0/content_hash.txt",
       "prompt": "/8a/9df0364045/0/prompt.txt"
+    },
+    {
+      "metadata": "/8a/9df0364045/1/metadata.json",
+      "transcript": "/8a/9df0364045/1/full.jsonl",
+      "context": "",
+      "content_hash": "/8a/9df0364045/1/content_hash.txt",
+      "prompt": ""
     }
   ],
   "token_usage": {
