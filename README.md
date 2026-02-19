@@ -32,6 +32,10 @@ Modern developers use multiple AI coding assistants. Each has strengths: Claude 
 
 ## Installation
 
+**Prerequisites:**
+- [Bun](https://bun.sh) runtime
+- At least one supported engine CLI installed
+
 ```bash
 # Clone the repository
 git clone https://github.com/user/reef-coder.git
@@ -39,20 +43,28 @@ cd reef-coder
 
 # Install dependencies
 bun install
+
+# Install globally
+bun run build
 ```
 
-**Prerequisites:**
-- [Bun](https://bun.sh) runtime
-- At least one supported engine CLI installed
+After that, you can run `reef` from anywhere in your terminal.
 
 ## Usage
 
 ```bash
 # Start Reef Coder
-bun run index.ts
+reef
 
 # With custom working directory
-bun run index.ts --workdir /path/to/project
+reef --workdir /path/to/project
+```
+
+### Development
+
+```bash
+# Run locally without installing
+bun run dev
 ```
 
 ### Interactive Flow
@@ -117,11 +129,11 @@ Inside a chat session:
 ## Development
 
 ```bash
+# Run locally
+bun run dev
+
 # Type check
 bunx tsc --noEmit
-
-# Run
-bun run index.ts
 ```
 
 ## License

@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import { resolve } from 'node:path';
 import { stat, realpath } from 'node:fs/promises';
 import { render } from 'ink';
